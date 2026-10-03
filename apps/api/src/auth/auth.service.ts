@@ -27,7 +27,7 @@ export class AuthService {
         email: data.email,
         name: data.name,
         passwordHash: hashedPassword,
-        role: data.role || Role.CITIZEN,
+        role: Role.CITIZEN, // Fixed Role Injection: Ignore data.role
       },
     });
 

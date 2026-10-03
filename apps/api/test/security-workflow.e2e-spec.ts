@@ -80,19 +80,56 @@ describe('Security & Workflow (e2e)', () => {
   });
 
   describe('Phase 0 Bug: 403 on Issue Verification', () => {
-    it('should allow a supervisor to verify an issue they created (fails currently)', async () => {
+    it('should allow a supervisor to verify an issue they created', async () => {
       const managerEmail = `supervisor_${Date.now()}@test.com`;
-      const managerRes = await request(app.getHttpServer()).post('/auth/register').send({
-        email: managerEmail, password: 'password', name: 'Manager', role: 'SUPERVISOR'
-      });
-      const managerToken = managerRes.body.access_token;
-
       const coordEmail = `staff_${Date.now()}@test.com`;
-      const coordRes = await request(app.getHttpServer()).post('/auth/register').send({
-        email: coordEmail, password: 'password', name: 'Coordinator', role: 'STAFF'
+
+      // 1. Create Supervisor directly via DB
+      const managerUser = await prisma.user.create({
+        data: {
+          email: managerEmail,
+          passwordHash: 'dummy',
+          name: 'Manager',
+          role: Role.SUPERVISOR,
+        }
       });
-      const coordId = coordRes.body.user.id;
-      const coordToken = coordRes.body.access_token;
+
+      // 2. Create Staff directly via DB
+      const coordUser = await prisma.user.create({
+        data: {
+          email: coordEmail,
+          passwordHash: 'dummy',
+          name: 'Coordinator',
+          role: Role.STAFF,
+        }
+      });
+
+      // Need real tokens. Best way: let them register, THEN upgrade them via DB, THEN login
+      // Wait, we can just use the JwtService to generate tokens, or just register -> upgrade -> login.
+      await request(app.getHttpServer()).post('/auth/register').send({
+        email: `real_${managerEmail}`, password: 'password', name: 'Manager'
+      });
+      await prisma.user.update({
+        where: { email: `real_${managerEmail}` },
+        data: { role: Role.SUPERVISOR }
+      });
+      const managerLoginRes = await request(app.getHttpServer()).post('/auth/login').send({
+        email: `real_${managerEmail}`, password: 'password'
+      });
+      const managerToken = managerLoginRes.body.access_token;
+
+      await request(app.getHttpServer()).post('/auth/register').send({
+        email: `real_${coordEmail}`, password: 'password', name: 'Coordinator'
+      });
+      await prisma.user.update({
+        where: { email: `real_${coordEmail}` },
+        data: { role: Role.STAFF }
+      });
+      const coordLoginRes = await request(app.getHttpServer()).post('/auth/login').send({
+        email: `real_${coordEmail}`, password: 'password'
+      });
+      const coordToken = coordLoginRes.body.access_token;
+      const coordId = coordLoginRes.body.user.id;
 
       const issueRes = await request(app.getHttpServer())
         .post('/issues')

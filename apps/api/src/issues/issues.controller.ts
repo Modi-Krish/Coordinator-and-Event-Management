@@ -32,6 +32,6 @@ export class IssuesController {
     @Param('id') id: string,
     @Body('status') status: IssueStatus,
   ) {
-    return this.issuesService.updateIssueStatus(req.user.userId, id, status);
+    return this.issuesService.updateIssueStatus(req.user, id, status);
   }
 }

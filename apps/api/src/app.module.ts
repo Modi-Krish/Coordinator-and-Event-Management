@@ -15,6 +15,7 @@ import { UsersModule } from './users/users.module';
   imports: [
     ScheduleModule.forRoot(),
     PrismaModule, 
+    AuthModule,
     IssuesModule, 
     RealtimeModule,
     NotificationsModule,

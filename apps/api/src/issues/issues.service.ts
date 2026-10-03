@@ -11,26 +11,36 @@ export class IssuesService {
   ) {}
 
   async reportIssue(userId: string, data: any) {
-    // Basic assignment logic: Find a coordinator to assign this to
-    const availableCoordinator = await this.prisma.user.findFirst({
-      where: { role: Role.STAFF },
-      orderBy: { assignedIssues: { _count: 'asc' } } // Load balancing based on active issues
-    });
+    let assigneeId = data.assignedToId;
 
-    const status = availableCoordinator ? IssueStatus.ASSIGNED : IssueStatus.REPORTED;
+    if (!assigneeId) {
+      // Basic assignment logic: Find a coordinator to assign this to
+      const availableCoordinator = await this.prisma.user.findFirst({
+        where: { role: Role.STAFF },
+        orderBy: { assignedIssues: { _count: 'asc' } } // Load balancing based on active issues
+      });
+      assigneeId = availableCoordinator?.id || null;
+    }
+
+    const status = assigneeId ? IssueStatus.ASSIGNED : IssueStatus.REPORTED;
 
     const issue = await this.prisma.issue.create({
       data: {
-        ...data,
+        title: data.title,
+        description: data.description,
+        locationLat: data.locationLat,
+        locationLng: data.locationLng,
+        cityId: data.cityId,
+        wardId: data.wardId,
         reportedById: userId,
-        assignedToId: availableCoordinator?.id || null,
+        assignedToId: assigneeId,
         status,
       },
     });
 
-    if (availableCoordinator) {
+    if (assigneeId) {
       await this.notificationsService.createNotification({
-        recipientId: availableCoordinator.id,
+        recipientId: assigneeId,
         type: 'ISSUE_ASSIGNED',
         title: 'New Issue Assigned',
         message: `A new issue "${issue.title}" has been assigned to you.`,
@@ -68,10 +78,20 @@ export class IssuesService {
     return issue;
   }
 
-  async updateIssueStatus(userId: string, issueId: string, status: IssueStatus) {
+  async updateIssueStatus(user: any, issueId: string, status: IssueStatus) {
     const issue = await this.getIssueById(issueId);
     
-    // Additional auth checks should be implemented based on hierarchy
+    const isOwner = issue.reportedById === user.userId;
+    const isAssignee = issue.assignedToId === user.userId;
+    const isSupervisorOrAdmin = user.role === Role.SUPERVISOR || user.role === Role.ADMIN;
+    
+    if (!isOwner && !isAssignee && !isSupervisorOrAdmin) {
+      throw new ForbiddenException('Not authorized to update this issue');
+    }
+    
+    if (status === IssueStatus.VERIFIED && !isSupervisorOrAdmin) {
+      throw new ForbiddenException('Only supervisors or admins can verify issues');
+    }
     
     const updatedIssue = await this.prisma.issue.update({
       where: { id: issueId },
