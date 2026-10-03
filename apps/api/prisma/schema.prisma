@@ -1,0 +1,265 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Organization {
+  id          String       @id @default(uuid())
+  name        String
+  code        String       @unique
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  departments Department[]
+}
+
+model Department {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String
+  code           String       @unique
+  description    String?
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  users          User[]
+}
+
+model User {
+  id                String             @id @default(uuid())
+  employeeId        String?            @unique
+  name              String
+  email             String             @unique
+  phone             String?
+  passwordHash      String
+  role              Role
+  departmentId      String?
+  department        Department?        @relation(fields: [departmentId], references: [id])
+  profilePhotoUrl   String?
+  status            UserStatus         @default(OFFLINE)
+  isActive          Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  lastLoginAt       DateTime?
+  
+  // Relationships
+  managerRelations  UserRelationship[] @relation("ManagerUser")
+  subordinateRelations UserRelationship[] @relation("SubordinateUser")
+  createdTasks      Task[]             @relation("TaskCreator")
+  assignedTasks     Task[]             @relation("TaskAssignee")
+  taskHistories     TaskStatusHistory[] @relation("TaskHistoryChanger")
+  taskAttachments   TaskAttachment[]   @relation("TaskAttachmentUploader")
+  reportedIssues    Issue[]            @relation("IssueReporter")
+  assignedIssues    Issue[]            @relation("IssueAssignee")
+  issueAttachments  IssueAttachment[]  @relation("IssueAttachmentUploader")
+  locationHistory   LocationHistory[]
+  notifications     Notification[]
+  initiatedCalls    Call[]             @relation("CallInitiator")
+  receivedCalls     Call[]             @relation("CallRecipient")
+}
+
+model UserRelationship {
+  id                String   @id @default(uuid())
+  managerUserId     String
+  manager           User     @relation("ManagerUser", fields: [managerUserId], references: [id])
+  subordinateUserId String
+  subordinate       User     @relation("SubordinateUser", fields: [subordinateUserId], references: [id])
+  relationshipType  String
+  createdAt         DateTime @default(now())
+
+  @@unique([managerUserId, subordinateUserId])
+}
+
+enum Role {
+  STUDENT
+  COORDINATOR
+  CORE_MEMBER
+  FACULTY
+  INTERN
+  MANAGER
+  ADMIN
+}
+
+enum UserStatus {
+  ONLINE
+  AVAILABLE
+  BUSY
+  ON_TASK
+  ON_BREAK
+  OFFLINE
+  EMERGENCY
+}
+
+model Task {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  createdById String
+  createdBy   User      @relation("TaskCreator", fields: [createdById], references: [id])
+  assignedToId String?
+  assignedTo  User?     @relation("TaskAssignee", fields: [assignedToId], references: [id])
+  priority    Priority  @default(MEDIUM)
+  status      TaskStatus @default(ASSIGNED)
+  category    String?
+  deadline    DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+  verifiedAt  DateTime?
+  // Use a string to represent the geography point temporarily, real PostGIS uses unsupported types
+  locationLat Float?
+  locationLng Float?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  history     TaskStatusHistory[]
+  attachments TaskAttachment[]
+}
+
+model TaskStatusHistory {
+  id          String    @id @default(uuid())
+  taskId      String
+  task        Task      @relation(fields: [taskId], references: [id])
+  changedById String
+  changedBy   User      @relation("TaskHistoryChanger", fields: [changedById], references: [id])
+  oldStatus   TaskStatus?
+  newStatus   TaskStatus
+  remarks     String?
+  locationLat Float?
+  locationLng Float?
+  createdAt   DateTime  @default(now())
+}
+
+model TaskAttachment {
+  id          String    @id @default(uuid())
+  taskId      String
+  task        Task      @relation(fields: [taskId], references: [id])
+  uploadedById String
+  uploadedBy  User      @relation("TaskAttachmentUploader", fields: [uploadedById], references: [id])
+  fileUrl     String
+  fileType    String?
+  mimeType    String?
+  fileSize    BigInt?
+  createdAt   DateTime  @default(now())
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TaskStatus {
+  ASSIGNED
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  VERIFIED
+  REJECTED
+  CANCELLED
+  OVERDUE
+}
+
+model Issue {
+  id           String    @id @default(uuid())
+  issueNumber  String    @unique @default(cuid()) // Simplified for now
+  reportedById String
+  reportedBy   User      @relation("IssueReporter", fields: [reportedById], references: [id])
+  assignedToId String?
+  assignedTo   User?     @relation("IssueAssignee", fields: [assignedToId], references: [id])
+  title        String
+  description  String?
+  priority     Priority  @default(MEDIUM)
+  status       IssueStatus @default(REPORTED)
+  category     String?
+  locationLat  Float?
+  locationLng  Float?
+  address      String?
+  reportedAt   DateTime  @default(now())
+  acceptedAt   DateTime?
+  resolvedAt   DateTime?
+  closedAt     DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  attachments  IssueAttachment[]
+}
+
+model IssueAttachment {
+  id           String    @id @default(uuid())
+  issueId      String
+  issue        Issue     @relation(fields: [issueId], references: [id])
+  uploadedById String
+  uploadedBy   User      @relation("IssueAttachmentUploader", fields: [uploadedById], references: [id])
+  fileUrl      String
+  fileType     String?
+  mimeType     String?
+  fileSize     BigInt?
+  createdAt    DateTime  @default(now())
+}
+
+model LocationHistory {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  latitude    Float
+  longitude   Float
+  accuracy    Float?
+  recordedAt  DateTime  @default(now())
+}
+
+model Notification {
+  id              String    @id @default(uuid())
+  recipientId     String
+  recipient       User      @relation(fields: [recipientId], references: [id])
+  type            String
+  title           String
+  message         String
+  referenceType   String?   // E.g., 'TASK' or 'ISSUE'
+  referenceId     String?
+  isRead          Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  readAt          DateTime?
+}
+
+model Call {
+  id              String    @id @default(uuid())
+  initiatedById   String
+  initiatedBy     User      @relation("CallInitiator", fields: [initiatedById], references: [id])
+  recipientId     String
+  recipient       User      @relation("CallRecipient", fields: [recipientId], references: [id])
+  callType        String    // 'VOICE' or 'VIDEO'
+  status          CallStatus @default(RINGING)
+  startedAt       DateTime?
+  endedAt         DateTime?
+  durationSeconds Int?
+  createdAt       DateTime  @default(now())
+}
+
+enum CallStatus {
+  RINGING
+  ACCEPTED
+  REJECTED
+  MISSED
+  ENDED
+  FAILED
+}
+
+enum IssueStatus {
+  REPORTED
+  RECEIVED
+  ASSIGNED
+  ACCEPTED
+  IN_PROGRESS
+  ESCALATED
+  RESOLVED
+  VERIFIED
+  CLOSED
+  REJECTED
+}
