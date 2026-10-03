@@ -11,11 +11,11 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  @Roles(Role.MANAGER, Role.FACULTY, Role.CORE_MEMBER, Role.INTERN)
+  @Roles(Role.SUPERVISOR, Role.ADMIN, Role.STAFF)
   async createUser(@Request() req: any, @Body() data: any) {
     // Determine the reporting manager. Usually the user creating, unless specified and allowed
     let managerId = req.user.userId;
-    if (data.reportingManagerId && req.user.role === Role.MANAGER) {
+    if (data.reportingManagerId && req.user.role === Role.SUPERVISOR) {
       managerId = data.reportingManagerId; // Manager can assign to someone else
     }
     

@@ -11,7 +11,7 @@ export class IssuesController {
   constructor(private readonly issuesService: IssuesService) {}
 
   @Post()
-  @Roles(Role.STUDENT, Role.COORDINATOR, Role.CORE_MEMBER, Role.FACULTY, Role.INTERN, Role.MANAGER) 
+  @Roles(Role.CITIZEN, Role.STAFF, Role.SUPERVISOR, Role.ADMIN) 
   async reportIssue(@Request() req: any, @Body() data: any) {
     return this.issuesService.reportIssue(req.user.userId, data);
   }

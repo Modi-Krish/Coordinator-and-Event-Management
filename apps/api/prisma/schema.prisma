@@ -31,6 +31,28 @@ model Department {
   users          User[]
 }
 
+model City {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  wards     Ward[]
+  issues    Issue[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Ward {
+  id        String   @id @default(uuid())
+  cityId    String
+  city      City     @relation(fields: [cityId], references: [id])
+  wardNumber String
+  name      String?
+  issues    Issue[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cityId, wardNumber])
+}
+
 model User {
   id                String             @id @default(uuid())
   employeeId        String?            @unique
@@ -51,13 +73,13 @@ model User {
   // Relationships
   managerRelations  UserRelationship[] @relation("ManagerUser")
   subordinateRelations UserRelationship[] @relation("SubordinateUser")
-  createdTasks      Task[]             @relation("TaskCreator")
-  assignedTasks     Task[]             @relation("TaskAssignee")
-  taskHistories     TaskStatusHistory[] @relation("TaskHistoryChanger")
-  taskAttachments   TaskAttachment[]   @relation("TaskAttachmentUploader")
+  
+  // Merged Issues/Tasks
   reportedIssues    Issue[]            @relation("IssueReporter")
   assignedIssues    Issue[]            @relation("IssueAssignee")
+  issueHistories    IssueStatusHistory[] @relation("IssueHistoryChanger")
   issueAttachments  IssueAttachment[]  @relation("IssueAttachmentUploader")
+  
   locationHistory   LocationHistory[]
   notifications     Notification[]
   initiatedCalls    Call[]             @relation("CallInitiator")
@@ -77,12 +99,9 @@ model UserRelationship {
 }
 
 enum Role {
-  STUDENT
-  COORDINATOR
-  CORE_MEMBER
-  FACULTY
-  INTERN
-  MANAGER
+  CITIZEN
+  STAFF
+  SUPERVISOR
   ADMIN
 }
 
@@ -96,58 +115,6 @@ enum UserStatus {
   EMERGENCY
 }
 
-model Task {
-  id          String    @id @default(uuid())
-  title       String
-  description String?
-  createdById String
-  createdBy   User      @relation("TaskCreator", fields: [createdById], references: [id])
-  assignedToId String?
-  assignedTo  User?     @relation("TaskAssignee", fields: [assignedToId], references: [id])
-  priority    Priority  @default(MEDIUM)
-  status      TaskStatus @default(ASSIGNED)
-  category    String?
-  deadline    DateTime?
-  startedAt   DateTime?
-  completedAt DateTime?
-  verifiedAt  DateTime?
-  // Use a string to represent the geography point temporarily, real PostGIS uses unsupported types
-  locationLat Float?
-  locationLng Float?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  history     TaskStatusHistory[]
-  attachments TaskAttachment[]
-}
-
-model TaskStatusHistory {
-  id          String    @id @default(uuid())
-  taskId      String
-  task        Task      @relation(fields: [taskId], references: [id])
-  changedById String
-  changedBy   User      @relation("TaskHistoryChanger", fields: [changedById], references: [id])
-  oldStatus   TaskStatus?
-  newStatus   TaskStatus
-  remarks     String?
-  locationLat Float?
-  locationLng Float?
-  createdAt   DateTime  @default(now())
-}
-
-model TaskAttachment {
-  id          String    @id @default(uuid())
-  taskId      String
-  task        Task      @relation(fields: [taskId], references: [id])
-  uploadedById String
-  uploadedBy  User      @relation("TaskAttachmentUploader", fields: [uploadedById], references: [id])
-  fileUrl     String
-  fileType    String?
-  mimeType    String?
-  fileSize    BigInt?
-  createdAt   DateTime  @default(now())
-}
-
 enum Priority {
   LOW
   MEDIUM
@@ -155,40 +122,69 @@ enum Priority {
   CRITICAL
 }
 
-enum TaskStatus {
+enum IssueStatus {
+  REPORTED
+  RECEIVED
   ASSIGNED
   ACCEPTED
   IN_PROGRESS
-  COMPLETED
+  ESCALATED
+  RESOLVED
   VERIFIED
+  CLOSED
   REJECTED
-  CANCELLED
-  OVERDUE
 }
 
 model Issue {
   id           String    @id @default(uuid())
-  issueNumber  String    @unique @default(cuid()) // Simplified for now
+  issueNumber  String    @unique @default(cuid())
   reportedById String
   reportedBy   User      @relation("IssueReporter", fields: [reportedById], references: [id])
   assignedToId String?
   assignedTo   User?     @relation("IssueAssignee", fields: [assignedToId], references: [id])
+  
+  cityId       String?
+  city         City?     @relation(fields: [cityId], references: [id])
+  wardId       String?
+  ward         Ward?     @relation(fields: [wardId], references: [id])
+  
   title        String
   description  String?
   priority     Priority  @default(MEDIUM)
   status       IssueStatus @default(REPORTED)
   category     String?
+  
   locationLat  Float?
   locationLng  Float?
   address      String?
+  
+  deadline     DateTime?
+  startedAt    DateTime?
+  
   reportedAt   DateTime  @default(now())
   acceptedAt   DateTime?
   resolvedAt   DateTime?
+  verifiedAt   DateTime?
   closedAt     DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
+  history      IssueStatusHistory[]
   attachments  IssueAttachment[]
+}
+
+model IssueStatusHistory {
+  id          String      @id @default(uuid())
+  issueId     String
+  issue       Issue       @relation(fields: [issueId], references: [id])
+  changedById String
+  changedBy   User        @relation("IssueHistoryChanger", fields: [changedById], references: [id])
+  oldStatus   IssueStatus?
+  newStatus   IssueStatus
+  remarks     String?
+  locationLat Float?
+  locationLng Float?
+  createdAt   DateTime    @default(now())
 }
 
 model IssueAttachment {
@@ -221,7 +217,7 @@ model Notification {
   type            String
   title           String
   message         String
-  referenceType   String?   // E.g., 'TASK' or 'ISSUE'
+  referenceType   String?   
   referenceId     String?
   isRead          Boolean   @default(false)
   createdAt       DateTime  @default(now())
@@ -234,7 +230,7 @@ model Call {
   initiatedBy     User      @relation("CallInitiator", fields: [initiatedById], references: [id])
   recipientId     String
   recipient       User      @relation("CallRecipient", fields: [recipientId], references: [id])
-  callType        String    // 'VOICE' or 'VIDEO'
+  callType        String    
   status          CallStatus @default(RINGING)
   startedAt       DateTime?
   endedAt         DateTime?
@@ -249,17 +245,4 @@ enum CallStatus {
   MISSED
   ENDED
   FAILED
-}
-
-enum IssueStatus {
-  REPORTED
-  RECEIVED
-  ASSIGNED
-  ACCEPTED
-  IN_PROGRESS
-  ESCALATED
-  RESOLVED
-  VERIFIED
-  CLOSED
-  REJECTED
 }

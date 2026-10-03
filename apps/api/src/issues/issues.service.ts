@@ -13,7 +13,7 @@ export class IssuesService {
   async reportIssue(userId: string, data: any) {
     // Basic assignment logic: Find a coordinator to assign this to
     const availableCoordinator = await this.prisma.user.findFirst({
-      where: { role: Role.COORDINATOR },
+      where: { role: Role.STAFF },
       orderBy: { assignedIssues: { _count: 'asc' } } // Load balancing based on active issues
     });
 
@@ -44,13 +44,13 @@ export class IssuesService {
 
   async getIssues(user: any) {
     // Basic RBAC for issue visibility
-    if (user.role === Role.MANAGER) {
+    if (user.role === Role.SUPERVISOR || user.role === Role.ADMIN) {
       return this.prisma.issue.findMany();
-    } else if (user.role === Role.COORDINATOR) {
+    } else if (user.role === Role.STAFF) {
       return this.prisma.issue.findMany({
         where: { assignedToId: user.userId },
       });
-    } else if (user.role === Role.STUDENT) {
+    } else if (user.role === Role.CITIZEN) {
       return this.prisma.issue.findMany({
         where: { reportedById: user.userId },
       });

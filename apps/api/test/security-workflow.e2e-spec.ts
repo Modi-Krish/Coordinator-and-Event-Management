@@ -37,13 +37,11 @@ describe('Security & Workflow (e2e)', () => {
           email,
           password: 'password123',
           name: 'Hacker',
-          role: 'MANAGER' // Attempt to inject role
-        })
-        .expect(201); // The request succeeds
+        role: 'ADMIN' // Attempt to inject role
+      })
+      .expect(201);
 
-      // This test is written to EXPECT correct security behavior.
-      // Currently, it will fail because the role IS injected.
-      expect(res.body.user.role).not.toBe('MANAGER');
+    expect(res.body.user.role).not.toBe('ADMIN');
     });
   });
 
@@ -81,42 +79,36 @@ describe('Security & Workflow (e2e)', () => {
     });
   });
 
-  describe('Phase 0 Bug: 403 on Task Verification', () => {
-    it('should allow a manager to verify a task they created (fails currently)', async () => {
-      // 1. Create manager (using the role injection bug to our advantage for this test setup!)
-      const managerEmail = `manager_${Date.now()}@test.com`;
+  describe('Phase 0 Bug: 403 on Issue Verification', () => {
+    it('should allow a supervisor to verify an issue they created (fails currently)', async () => {
+      const managerEmail = `supervisor_${Date.now()}@test.com`;
       const managerRes = await request(app.getHttpServer()).post('/auth/register').send({
-        email: managerEmail, password: 'password', name: 'Manager', role: 'MANAGER'
+        email: managerEmail, password: 'password', name: 'Manager', role: 'SUPERVISOR'
       });
       const managerToken = managerRes.body.access_token;
 
-      // 2. Create assignee (coordinator)
-      const coordEmail = `coord_${Date.now()}@test.com`;
+      const coordEmail = `staff_${Date.now()}@test.com`;
       const coordRes = await request(app.getHttpServer()).post('/auth/register').send({
-        email: coordEmail, password: 'password', name: 'Coordinator', role: 'COORDINATOR'
+        email: coordEmail, password: 'password', name: 'Coordinator', role: 'STAFF'
       });
       const coordId = coordRes.body.user.id;
       const coordToken = coordRes.body.access_token;
 
-      // 3. Manager creates task for coordinator
-      const taskRes = await request(app.getHttpServer())
-        .post('/tasks')
+      const issueRes = await request(app.getHttpServer())
+        .post('/issues')
         .set('Authorization', `Bearer ${managerToken}`)
-        .send({ title: 'Test Task', description: 'Test', assignedToId: coordId });
+        .send({ title: 'Test Issue', description: 'Test', assignedToId: coordId });
       
-      const taskId = taskRes.body.id;
+      const issueId = issueRes.body.id;
 
-      // 4. Coordinator completes task
       await request(app.getHttpServer())
-        .patch(`/tasks/${taskId}/status`)
+        .patch(`/issues/${issueId}/status`)
         .set('Authorization', `Bearer ${coordToken}`)
-        .send({ status: 'COMPLETED' })
+        .send({ status: 'RESOLVED' })
         .expect(200);
 
-      // 5. Manager tries to VERIFY task
-      // We expect 200 OK, but currently it returns 403 Forbidden.
       await request(app.getHttpServer())
-        .patch(`/tasks/${taskId}/status`)
+        .patch(`/issues/${issueId}/status`)
         .set('Authorization', `Bearer ${managerToken}`)
         .send({ status: 'VERIFIED' })
         .expect(200);

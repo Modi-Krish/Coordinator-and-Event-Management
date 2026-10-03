@@ -43,7 +43,7 @@ export class UsersService {
   }
 
   async getMyTeam(userId: string, role: Role) {
-    if (role === Role.MANAGER) {
+    if (role === Role.SUPERVISOR || role === Role.ADMIN) {
       return this.prisma.user.findMany(); // Manager sees all
     }
 
