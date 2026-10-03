@@ -10,6 +10,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { EscalationModule } from './escalation/escalation.module';
 import { CallsModule } from './calls/calls.module';
 import { UsersModule } from './users/users.module';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { UsersModule } from './users/users.module';
     NotificationsModule,
     EscalationModule,
     CallsModule,
-    UsersModule
+    UsersModule,
+    StorageModule
   ],
   controllers: [AppController],
   providers: [AppService],

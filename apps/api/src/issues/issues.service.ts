@@ -2,12 +2,16 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { PrismaService } from '../prisma/prisma.service';
 import { IssueStatus, Role } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
+import { Inject } from '@nestjs/common';
+import { STORAGE_SERVICE } from '../storage/storage.interface';
+import type { IStorageService } from '../storage/storage.interface';
 
 @Injectable()
 export class IssuesService {
   constructor(
     private prisma: PrismaService,
-    private notificationsService: NotificationsService
+    private notificationsService: NotificationsService,
+    @Inject(STORAGE_SERVICE) private storageService: IStorageService
   ) {}
 
   async reportIssue(userId: string, data: any) {
@@ -104,5 +108,33 @@ export class IssuesService {
     });
 
     return updatedIssue;
+  }
+
+  async uploadAttachment(user: any, issueId: string, file: Express.Multer.File) {
+    const issue = await this.getIssueById(issueId);
+    
+    // Only related users can upload attachments
+    const isOwner = issue.reportedById === user.userId;
+    const isAssignee = issue.assignedToId === user.userId;
+    const isSupervisorOrAdmin = user.role === Role.SUPERVISOR || user.role === Role.ADMIN;
+    
+    if (!isOwner && !isAssignee && !isSupervisorOrAdmin) {
+      throw new ForbiddenException('Not authorized to upload attachments for this issue');
+    }
+
+    const fileUrl = await this.storageService.uploadFile(file, `issues/${issueId}`);
+    
+    const attachment = await this.prisma.issueAttachment.create({
+      data: {
+        issueId,
+        uploadedById: user.userId,
+        fileUrl,
+        fileType: file.originalname.split('.').pop(),
+        mimeType: file.mimetype,
+        fileSize: file.size,
+      }
+    });
+
+    return attachment;
   }
 }

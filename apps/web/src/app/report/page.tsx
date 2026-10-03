@@ -10,9 +10,11 @@ export default function ReportIssue() {
   const [errorMsg, setErrorMsg] = useState("");
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
   
   const titleRef = useRef<HTMLInputElement>(null);
   const descRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleLocationCapture = () => {
     setIsLocating(true);
@@ -56,7 +58,7 @@ export default function ReportIssue() {
     const category = categoryInput?.value || "Infrastructure";
 
     try {
-      await fetchAPI('/issues', {
+      const issueRes = await fetchAPI('/issues', {
         method: 'POST',
         body: JSON.stringify({
           title: titleRef.current?.value,
@@ -67,7 +69,25 @@ export default function ReportIssue() {
           locationLng: location.lng
         })
       });
+
+      // Upload file if selected
+      if (file && issueRes.id) {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        // Cannot use JSON fetchAPI for FormData, doing raw fetch
+        const token = localStorage.getItem('token');
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/issues/${issueRes.id}/attachments`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+      }
+
       setIsSuccess(true);
+      setFile(null);
     } catch (err: any) {
       setErrorMsg(err.message || "Failed to submit issue");
     } finally {
@@ -152,10 +172,34 @@ export default function ReportIssue() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Photo Upload */}
-            <div className="border-2 border-dashed border-white/10 rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/5 transition-colors bg-black/10">
-              <Camera className="text-white/40 mb-2" size={32} />
-              <p className="text-sm font-medium text-white/80">Upload Photo</p>
-              <p className="text-xs text-white/40 mt-1">Tap to take a picture</p>
+            <div 
+              onClick={() => fileInputRef.current?.click()}
+              className="border-2 border-dashed border-white/10 rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/5 transition-colors bg-black/10 relative overflow-hidden"
+            >
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/*,video/*"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setFile(e.target.files[0]);
+                  }
+                }}
+              />
+              {file ? (
+                <>
+                  <CheckCircle2 className="text-green-400 mb-2" size={32} />
+                  <p className="text-sm font-medium text-green-400 truncate w-full px-4">{file.name}</p>
+                  <p className="text-xs text-white/40 mt-1">Tap to change</p>
+                </>
+              ) : (
+                <>
+                  <Camera className="text-white/40 mb-2" size={32} />
+                  <p className="text-sm font-medium text-white/80">Upload Photo</p>
+                  <p className="text-xs text-white/40 mt-1">Tap to select a file</p>
+                </>
+              )}
             </div>
 
             {/* Location Capture */}
