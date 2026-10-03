@@ -15,8 +15,8 @@ export class UsersController {
   async createUser(@Request() req: any, @Body() data: any) {
     // Determine the reporting manager. Usually the user creating, unless specified and allowed
     let managerId = req.user.userId;
-    if (data.reportingManagerId && req.user.role === Role.SUPERVISOR) {
-      managerId = data.reportingManagerId; // Manager can assign to someone else
+    if (data.reportingManagerId && req.user.role === Role.ADMIN) {
+      managerId = data.reportingManagerId; // Manager can assign to someone else (e.g. Faculty)
     }
     
     return this.usersService.createUser(managerId, data);

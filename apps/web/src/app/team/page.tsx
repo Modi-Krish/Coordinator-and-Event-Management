@@ -17,8 +17,9 @@ export default function TeamPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    role: 'COORDINATOR',
+    role: 'STAFF',
     departmentId: '',
+    reportingManagerId: '',
   });
 
   useEffect(() => {
@@ -55,7 +56,7 @@ export default function TeamPage() {
         body: JSON.stringify(formData),
       });
       setShowAddModal(false);
-      setFormData({ name: '', email: '', role: 'COORDINATOR', departmentId: '' });
+      setFormData({ name: '', email: '', role: 'STAFF', departmentId: '', reportingManagerId: '' });
       loadTeam(); // Refresh the list
     } catch (err: any) {
       alert("Failed to add user: " + err.message);
@@ -97,7 +98,7 @@ export default function TeamPage() {
             <Filter size={16} /> Roles
           </button>
 
-          {currentUser?.role === 'MANAGER' && (
+          {currentUser?.role === 'ADMIN' && (
             <button 
               onClick={() => setShowAddModal(true)}
               className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors"
@@ -131,8 +132,8 @@ export default function TeamPage() {
             <h3 className="text-lg font-bold text-white mb-1">{member.name}</h3>
             
             <span className="text-xs font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-1 rounded-full mb-4 flex items-center gap-1">
-              {member.role === 'MANAGER' && <Shield size={10} />}
-              {member.role.replace('_', ' ')}
+              {member.role === 'ADMIN' && <Shield size={10} />}
+              {member.role === 'ADMIN' ? 'Manager' : member.role === 'SUPERVISOR' ? 'Faculty' : member.role === 'STAFF' ? 'Staff' : 'Citizen'}
             </span>
             
             <div className="w-full space-y-2 mb-6">
@@ -211,13 +212,29 @@ export default function TeamPage() {
                   value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
                 >
-                  <option value="FACULTY" className="bg-[#0f1115]">Faculty</option>
-                  <option value="INTERN" className="bg-[#0f1115]">Intern</option>
-                  <option value="CORE_MEMBER" className="bg-[#0f1115]">Core Member</option>
-                  <option value="COORDINATOR" className="bg-[#0f1115]">Coordinator</option>
-                  <option value="STUDENT" className="bg-[#0f1115]">Student</option>
+                  <option value="SUPERVISOR" className="bg-[#0f1115]">Faculty (Supervisor)</option>
+                  <option value="STAFF" className="bg-[#0f1115]">Staff (Core Member/Intern/Coordinator)</option>
+                  <option value="CITIZEN" className="bg-[#0f1115]">Student</option>
                 </select>
               </div>
+
+              {/* Hierarchy Assignment */}
+              {currentUser?.role === 'ADMIN' && formData.role === 'STAFF' && (
+                <div>
+                  <label className="block text-xs font-medium text-white/60 mb-1">Assign To (Reporting Faculty)</label>
+                  <select 
+                    value={formData.reportingManagerId} onChange={e => setFormData({...formData, reportingManagerId: e.target.value})}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                  >
+                    <option value="" className="bg-[#0f1115]">Directly to Me (Manager)</option>
+                    <optgroup label="Faculty Members">
+                      {teamMembers.filter(m => m.role === 'SUPERVISOR').map(faculty => (
+                        <option key={faculty.id} value={faculty.id} className="bg-[#0f1115]">{faculty.name}</option>
+                      ))}
+                    </optgroup>
+                  </select>
+                </div>
+              )}
               
               <div className="pt-4 flex gap-3">
                 <button 
