@@ -40,7 +40,7 @@ export default function IssuesPage() {
 
   async function loadIssues() {
     try {
-      const data = await fetchAPI('/issues?type=ISSUE');
+      const data = await fetchAPI('/issues?type=TASK');
       setIssues(data);
     } catch (err) {
       console.error(err);
@@ -93,8 +93,8 @@ export default function IssuesPage() {
     <div className="max-w-7xl mx-auto pb-12">
       <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Issues Tracker</h1>
-          <p className="text-white/60 mt-1">Manage and resolve reported problems</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Tasks Tracker</h1>
+          <p className="text-white/60 mt-1">Manage and resolve tasks given by managers and faculty</p>
         </div>
         
         <div className="flex gap-3">
