@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { IssueStatus } from '@prisma/client';
 
 @Injectable()
@@ -11,6 +12,7 @@ export class EscalationService {
   constructor(
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
+    private realtimeGateway: RealtimeGateway,
   ) {}
 
   // Run every 30 minutes to check for unresolved issues
@@ -43,10 +45,12 @@ export class EscalationService {
         const managerId = issue.assignedTo.managerRelations[0].managerUserId;
         
         // Update issue status
-        await this.prisma.issue.update({
+        const updatedIssue = await this.prisma.issue.update({
           where: { id: issue.id },
           data: { status: IssueStatus.ESCALATED }
         });
+        
+        this.realtimeGateway.server.emit('issue:updated', updatedIssue);
 
         // Notify manager
         await this.notificationsService.createNotification({

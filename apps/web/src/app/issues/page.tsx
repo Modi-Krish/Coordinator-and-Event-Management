@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchAPI } from "@/lib/api";
+import { useSocket } from "@/components/SocketProvider";
 import { AlertCircle, Clock, CheckCircle2, MoreVertical, Search, Filter } from "lucide-react";
 
 export default function IssuesPage() {
@@ -15,6 +16,27 @@ export default function IssuesPage() {
     setCurrentUser(user);
     loadIssues();
   }, []);
+
+  const { socket, isConnected } = useSocket();
+
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+    
+    const handleIssueNew = (issue: any) => {
+      setIssues(prev => [issue, ...prev]);
+    };
+    const handleIssueUpdated = (issue: any) => {
+      setIssues(prev => prev.map(i => i.id === issue.id ? issue : i));
+    };
+
+    socket.on('issue:new', handleIssueNew);
+    socket.on('issue:updated', handleIssueUpdated);
+
+    return () => {
+      socket.off('issue:new', handleIssueNew);
+      socket.off('issue:updated', handleIssueUpdated);
+    };
+  }, [socket, isConnected]);
 
   async function loadIssues() {
     try {

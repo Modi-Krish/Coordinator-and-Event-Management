@@ -10,6 +10,7 @@ import {
   MapPin
 } from "lucide-react";
 import { fetchAPI } from "@/lib/api";
+import { useSocket } from "@/components/SocketProvider";
 
 export default function Dashboard() {
   const [issues, setIssues] = useState<any[]>([]);
@@ -37,9 +38,75 @@ export default function Dashboard() {
     loadData();
   }, []);
 
+  const { socket, isConnected } = useSocket();
+  
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    const handleIssueNew = (issue: any) => {
+      setIssues(prev => [issue, ...prev]);
+    };
+
+    const handleIssueUpdated = (issue: any) => {
+      setIssues(prev => prev.map(i => i.id === issue.id ? issue : i));
+    };
+
+    const handleLocationUpdate = (data: any) => {
+      setUsers(prev => prev.map(u => 
+        u.id === data.userId ? { ...u, lat: data.lat, lng: data.lng, status: 'online' } : u
+      ));
+    };
+
+    socket.on('issue:new', handleIssueNew);
+    socket.on('issue:updated', handleIssueUpdated);
+    socket.on('location:update', handleLocationUpdate);
+
+    return () => {
+      socket.off('issue:new', handleIssueNew);
+      socket.off('issue:updated', handleIssueUpdated);
+      socket.off('location:update', handleLocationUpdate);
+    };
+  }, [socket, isConnected]);
+
   const activeIssues = issues.filter(i => i.status !== 'RESOLVED');
   const criticalIssues = issues.filter(i => i.priority === 'HIGH' && i.status !== 'RESOLVED');
   const pendingTasks = tasks.filter(t => t.status !== 'COMPLETED');
+  
+  // Dashboard map logic
+  const activeUserPoints = users.filter(u => u.lat != null && u.lng != null);
+  const activeIssuePoints = activeIssues.filter(i => i.locationLat != null && i.locationLng != null);
+  const totalLocatedPoints = activeUserPoints.length + activeIssuePoints.length;
+
+  const getMapCoordinates = (lat: number, lng: number) => {
+    const allLats = [
+      ...activeUserPoints.map(u => u.lat as number),
+      ...activeIssuePoints.map(i => i.locationLat as number)
+    ];
+    const allLngs = [
+      ...activeUserPoints.map(u => u.lng as number),
+      ...activeIssuePoints.map(i => i.locationLng as number)
+    ];
+
+    if (allLats.length <= 1) {
+      return { top: '50%', left: '50%' };
+    }
+
+    const minLat = Math.min(...allLats);
+    const maxLat = Math.max(...allLats);
+    const minLng = Math.min(...allLngs);
+    const maxLng = Math.max(...allLngs);
+
+    const latSpan = Math.max(maxLat - minLat, 0.005);
+    const lngSpan = Math.max(maxLng - minLng, 0.005);
+
+    const top = 82 - ((lat - minLat) / latSpan) * 64;
+    const left = 18 + ((lng - minLng) / lngSpan) * 64;
+
+    return { 
+      top: `${Math.max(10, Math.min(90, top))}%`, 
+      left: `${Math.max(10, Math.min(90, left))}%` 
+    };
+  };
 
   if (isLoading) {
     return <div className="p-8 text-white/50">Loading dashboard data...</div>;
@@ -116,14 +183,27 @@ export default function Dashboard() {
             }}></div>
             
             {/* Real Issue Markers with captured coordinates */}
-            {activeIssues.filter(i => i.locationLat != null && i.locationLng != null).map((issue) => (
-              <div key={issue.id} className="absolute flex flex-col items-center animate-pulse" style={{ top: '48%', left: '50%' }}>
+            {activeIssuePoints.map((issue) => {
+              const coords = getMapCoordinates(issue.locationLat, issue.locationLng);
+              return (
+              <div key={issue.id} className="absolute flex flex-col items-center animate-pulse" style={{ top: coords.top, left: coords.left }}>
                 <div className="w-4 h-4 bg-red-500 rounded-full shadow-[0_0_15px_rgba(239,68,68,1)] border-2 border-white"></div>
                 <span className="text-[10px] font-bold mt-1 bg-red-500/80 px-1 rounded backdrop-blur-md">{issue.title}</span>
               </div>
-            ))}
+            )})}
+            
+            {/* Real User Markers */}
+            {activeUserPoints.map((u) => {
+              const coords = getMapCoordinates(u.lat!, u.lng!);
+              return (
+              <div key={u.id} className="absolute flex flex-col items-center" style={{ top: coords.top, left: coords.left }}>
+                <div className="w-6 h-6 rounded-full border-2 border-white bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+                  <span className="text-[8px] font-bold text-white">{u.name?.substring(0,2).toUpperCase()}</span>
+                </div>
+              </div>
+            )})}
 
-            {activeIssues.filter(i => i.locationLat != null && i.locationLng != null).length === 0 && (
+            {totalLocatedPoints === 0 && (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 text-white/40">
                 <MapPin size={24} className="mb-2 text-white/20" />
                 <p className="text-xs font-medium">No live GPS coordinates captured</p>

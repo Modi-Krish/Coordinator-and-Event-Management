@@ -79,9 +79,34 @@ export default function LiveMapPage() {
 
     socket.on('location:update', handleLocationUpdate);
 
+    const handleIssueNew = (issue: any) => {
+      if (issue.locationLat != null && issue.locationLng != null) {
+        setIssues(prev => [issue, ...prev]);
+      }
+    };
+    const handleIssueUpdated = (issue: any) => {
+      setIssues(prev => {
+        if (issue.status === 'RESOLVED' || issue.status === 'CLOSED') {
+          return prev.filter(i => i.id !== issue.id);
+        }
+        const exists = prev.some(i => i.id === issue.id);
+        if (exists) {
+          return prev.map(i => i.id === issue.id ? issue : i);
+        } else if (issue.locationLat != null && issue.locationLng != null) {
+          return [issue, ...prev];
+        }
+        return prev;
+      });
+    };
+
+    socket.on('issue:new', handleIssueNew);
+    socket.on('issue:updated', handleIssueUpdated);
+
     return () => {
       if (watchId) navigator.geolocation.clearWatch(watchId);
       socket.off('location:update', handleLocationUpdate);
+      socket.off('issue:new', handleIssueNew);
+      socket.off('issue:updated', handleIssueUpdated);
     };
   }, [socket, isConnected, currentUser]);
 

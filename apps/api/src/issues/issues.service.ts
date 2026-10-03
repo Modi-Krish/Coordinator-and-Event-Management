@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { PrismaService } from '../prisma/prisma.service';
 import { IssueStatus, Role } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { Inject } from '@nestjs/common';
 import { STORAGE_SERVICE } from '../storage/storage.interface';
 import type { IStorageService } from '../storage/storage.interface';
@@ -11,6 +12,7 @@ export class IssuesService {
   constructor(
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
+    private realtimeGateway: RealtimeGateway,
     @Inject(STORAGE_SERVICE) private storageService: IStorageService
   ) {}
 
@@ -52,6 +54,8 @@ export class IssuesService {
         referenceId: issue.id,
       });
     }
+
+    this.realtimeGateway.server.emit('issue:new', issue);
 
     return issue;
   }
@@ -106,6 +110,8 @@ export class IssuesService {
         ...(status === IssueStatus.CLOSED && { closedAt: new Date() }),
       },
     });
+
+    this.realtimeGateway.server.emit('issue:updated', updatedIssue);
 
     return updatedIssue;
   }
