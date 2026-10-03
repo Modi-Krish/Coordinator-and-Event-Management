@@ -95,7 +95,6 @@ export function Sidebar() {
       <nav className="flex-1 px-4 space-y-2 mt-4">
         <NavItem href="/" icon={<LayoutDashboard size={20} />} label="Dashboard" active />
         <NavItem href="/map" icon={<Map size={20} />} label="Live Map" />
-        <NavItem href="/tasks" icon={<CheckSquare size={20} />} label="Tasks" />
         <NavItem href="/issues" icon={<AlertOctagon size={20} />} label="Issues" />
         <NavItem href="/report" icon={<AlertOctagon size={20} />} label="Report Issue" />
         <NavItem href="/team" icon={<Users size={20} />} label="Team" />
