@@ -9,13 +9,17 @@ export default function CallsPage() {
   const { initiateCall } = useCall();
   const [contacts, setContacts] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function loadContacts() {
       try {
         const data = await fetchAPI('/users/team');
         setContacts(data);
-      } catch (err) {}
+      } catch (err) {
+      } finally {
+        setIsLoading(false);
+      }
     }
     loadContacts();
   }, []);
@@ -30,7 +34,7 @@ export default function CallsPage() {
       <div className="w-full md:w-1/3 flex flex-col gap-4">
         <header>
           <h1 className="text-3xl font-bold text-white tracking-tight">Calls</h1>
-          <p className="text-white/60 mt-1">Real-time communication</p>
+          <div className="text-white/60 mt-1">Real-time communication</div>
         </header>
 
         <div className="relative mt-2">
@@ -70,7 +74,12 @@ export default function CallsPage() {
                 </div>
               </div>
             ))}
-            {contacts.length === 0 && (
+            {isLoading && (
+              <div className="p-8 text-center text-white/50 text-sm animate-pulse">
+                Loading contacts...
+              </div>
+            )}
+            {!isLoading && contacts.length === 0 && (
               <div className="p-8 text-center text-white/50 text-sm">
                 No contacts found
               </div>
@@ -87,9 +96,9 @@ export default function CallsPage() {
             <div className="absolute top-0 right-0 w-4 h-4 bg-green-500 rounded-full animate-ping"></div>
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">WebRTC Ready</h2>
-          <p className="text-white/50 max-w-sm mb-6">
+          <div className="text-white/50 max-w-sm mb-6">
             Select a contact from your team directory to initiate a secure, encrypted peer-to-peer audio or video call.
-          </p>
+          </div>
           <div className="bg-white/5 p-4 rounded-xl border border-white/10 text-xs text-white/40 max-w-sm text-left">
             <div className="flex items-center gap-2 mb-1"><span className="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block"></span> Connected to WebSocket Signal Server</div>
             <div className="flex items-center gap-2 mb-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span> STUN/TURN ICE Servers Active</div>
