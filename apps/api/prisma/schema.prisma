@@ -84,6 +84,7 @@ model User {
   notifications     Notification[]
   initiatedCalls    Call[]             @relation("CallInitiator")
   receivedCalls     Call[]             @relation("CallRecipient")
+  auditLogs         AuditLog[]
 }
 
 model UserRelationship {
@@ -245,4 +246,18 @@ enum CallStatus {
   MISSED
   ENDED
   FAILED
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  action      String   // e.g., 'ISSUE_CREATED', 'STATUS_CHANGED', 'USER_LOGIN'
+  entityType  String   // e.g., 'ISSUE', 'USER'
+  entityId    String   // ID of the affected entity
+  actorId     String?  // ID of the user who performed the action
+  actor       User?    @relation(fields: [actorId], references: [id])
+  oldValues   Json?    // Snapshot of data before the change
+  newValues   Json?    // Snapshot of data after the change
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
 }
