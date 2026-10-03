@@ -14,20 +14,17 @@ import { useSocket } from "@/components/SocketProvider";
 
 export default function Dashboard() {
   const [issues, setIssues] = useState<any[]>([]);
-  const [tasks, setTasks] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [issuesData, tasksData, usersData] = await Promise.all([
+        const [issuesData, usersData] = await Promise.all([
           fetchAPI('/issues'),
-          fetchAPI('/tasks').catch(() => []), // Catch if tasks API is not ready
           fetchAPI('/users/team').catch(() => [])
         ]);
         setIssues(issuesData);
-        setTasks(tasksData);
         setUsers(usersData);
       } catch (err) {
         console.error("Failed to load dashboard data", err);
@@ -68,9 +65,9 @@ export default function Dashboard() {
     };
   }, [socket, isConnected]);
 
-  const activeIssues = issues.filter(i => i.status !== 'RESOLVED');
-  const criticalIssues = issues.filter(i => i.priority === 'HIGH' && i.status !== 'RESOLVED');
-  const pendingTasks = tasks.filter(t => t.status !== 'COMPLETED');
+  const activeIssues = issues.filter(i => i.status !== 'RESOLVED' && i.status !== 'CLOSED');
+  const criticalIssues = issues.filter(i => i.priority === 'HIGH' && i.status !== 'RESOLVED' && i.status !== 'CLOSED');
+  const inProgressIssues = issues.filter(i => i.status === 'IN_PROGRESS' || i.status === 'ACCEPTED');
   
   // Dashboard map logic
   const activeUserPoints = users.filter(u => u.lat != null && u.lng != null);
@@ -139,9 +136,9 @@ export default function Dashboard() {
           trend="0"
         />
         <StatCard 
-          title="Tasks in Progress" 
-          value={pendingTasks.length.toString()} 
-          subtitle={`${tasks.length} total tasks`} 
+          title="In Progress" 
+          value={inProgressIssues.length.toString()} 
+          subtitle="Issues being handled" 
           icon={<CheckCircle className="text-green-400" size={24} />} 
           trend="0"
         />
