@@ -14,10 +14,9 @@ import { useSocket } from "@/components/SocketProvider";
 import Map, { Marker } from "react-map-gl/maplibre";
 import 'maplibre-gl/dist/maplibre-gl.css';
 import * as maplibregl from 'maplibre-gl';
-import { setWorkerUrl } from 'maplibre-gl';
 
 if (typeof window !== 'undefined') {
-  setWorkerUrl("https://unpkg.com/maplibre-gl/dist/maplibre-gl-csp-worker.js");
+  maplibregl.setWorkerUrl("/maplibre-worker.mjs");
 }
 
 export default function Dashboard() {
