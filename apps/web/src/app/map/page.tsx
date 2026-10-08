@@ -150,38 +150,37 @@ export default function LiveMapPage() {
     <div className="flex flex-col h-[calc(100vh-6rem)] max-w-7xl mx-auto">
       <header className="mb-6 flex justify-between items-end">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Live Map</h1>
-          <p className="text-white/60 mt-1">Real-time geospatial overview</p>
+          <h1 className="text-4xl font-heading font-bold text-white tracking-tight">
+            Live <span className="text-gradient">Map</span>
+          </h1>
+          <p className="text-[#94A3B8] font-mono text-sm mt-2 tracking-wide uppercase">Real-time geospatial overview</p>
         </div>
         <div className="flex gap-2">
-          <button className="glass-panel px-4 py-2 flex items-center gap-2 text-sm font-medium hover:bg-white/10 transition-colors">
-            <Filter size={16} /> Filters
+          <button className="btn-outline text-[13px]">
+            <Filter size={16} className="mr-2" /> Filters
           </button>
         </div>
       </header>
 
-      <div className="flex-1 glass-panel p-1 rounded-2xl flex flex-col overflow-hidden relative">
+      <div className="flex-1 crypto-card !p-1 flex flex-col overflow-hidden relative">
         <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
-          <div className="glass-panel p-3 bg-black/40 backdrop-blur-md text-xs space-y-2">
-            <h3 className="font-bold text-white/80 border-b border-white/10 pb-1 mb-2">Legend</h3>
-            <div className="flex items-center gap-2 text-blue-300">
-              <div className="w-3 h-3 rounded-full bg-blue-500"></div> Coordinators ({activeUserPoints.length})
+          <div className="bg-[#030304]/80 backdrop-blur-md p-4 rounded-xl border border-[#1E293B] text-[10px] font-mono uppercase tracking-widest space-y-3 shadow-[0_0_20px_rgba(247,147,26,0.1)]">
+            <h3 className="font-bold text-[#F7931A] border-b border-[#1E293B] pb-2 mb-2">Legend</h3>
+            <div className="flex items-center gap-2 text-[#94A3B8]">
+              <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-[#EA580C] to-[#F7931A] shadow-[0_0_10px_rgba(247,147,26,0.5)]"></div> Coordinators ({activeUserPoints.length})
             </div>
-            <div className="flex items-center gap-2 text-red-300">
-              <div className="w-3 h-3 rounded-full bg-red-500"></div> Open Issues ({activeIssuePoints.length})
+            <div className="flex items-center gap-2 text-[#94A3B8]">
+              <div className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div> Open Issues ({activeIssuePoints.length})
             </div>
-            <div className="flex items-center gap-2 text-green-300">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div> Live Sync Active
+            <div className="flex items-center gap-2 text-[#FFD600]">
+              <div className="w-2 h-2 rounded-full bg-[#FFD600] animate-ping"></div> Live Sync Active
             </div>
           </div>
         </div>
 
-        <div className="flex-1 bg-[#1a1d24] relative overflow-hidden rounded-[15px]">
+        <div className="flex-1 bg-[#0F1115] relative overflow-hidden rounded-lg">
           {/* Mock Map Background */}
-          <div className="absolute inset-0 opacity-30 mix-blend-screen" style={{
-            backgroundImage: 'url("https://www.transparenttextures.com/patterns/cartographer.png")',
-            backgroundSize: '400px'
-          }}></div>
+          <div className="absolute inset-0 opacity-10 bg-grid-pattern"></div>
 
           {/* Active Users with Real Location */}
           {activeUserPoints.map(u => {
@@ -205,9 +204,9 @@ export default function LiveMapPage() {
             return (
             <div key={issue.id} className="absolute flex flex-col items-center animate-pulse" style={{ top: coords.top, left: coords.left }}>
               <div className="w-6 h-6 bg-red-500/20 rounded-full flex items-center justify-center border border-red-500/50">
-                <div className="w-3 h-3 bg-red-500 rounded-full shadow-[0_0_15px_rgba(239,68,68,1)] border-2 border-white"></div>
+                <div className="w-3 h-3 bg-red-500 rounded-full shadow-[0_0_20px_rgba(239,68,68,0.8)] border-2 border-[#0F1115]"></div>
               </div>
-              <span className="text-xs font-bold mt-1 bg-red-500/90 px-2 py-0.5 rounded shadow-lg backdrop-blur-md border border-red-400/50">
+              <span className="text-[10px] font-mono font-bold mt-2 bg-[#030304]/90 text-[#94A3B8] px-2 py-0.5 rounded border border-[#1E293B] shadow-lg backdrop-blur-md">
                 {issue.title}
               </span>
             </div>
@@ -216,13 +215,13 @@ export default function LiveMapPage() {
 
           {/* Empty State when no live GPS coordinates are broadcast yet */}
           {totalLocatedPoints === 0 && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-black/20 backdrop-blur-sm z-0">
-              <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/30 mb-3">
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-black/40 backdrop-blur-sm z-0">
+              <div className="w-16 h-16 rounded-full bg-[#EA580C]/10 border border-[#EA580C]/30 flex items-center justify-center text-[#F7931A] mb-4 shadow-[0_0_20px_rgba(234,88,12,0.2)]">
                 <Navigation2 size={28} />
               </div>
-              <h3 className="text-base font-semibold text-white/90">No Live Coordinates Broadcast</h3>
-              <p className="text-xs text-white/50 max-w-sm mt-1">
-                Active coordinators emitting live GPS and reported issues with geolocation will appear here automatically.
+              <h3 className="text-lg font-heading font-bold text-white tracking-wide">No Active Signatures</h3>
+              <p className="text-xs font-mono text-[#94A3B8] max-w-sm mt-2 uppercase tracking-widest">
+                Nodes broadcasting live location telemetry will appear here automatically.
               </p>
             </div>
           )}
@@ -234,34 +233,34 @@ export default function LiveMapPage() {
 
 function MapMarker({ top, left, role, name, status, onCall }: any) {
   const statusColors: any = {
-    online: 'bg-green-500',
-    busy: 'bg-yellow-500',
-    task: 'bg-blue-500',
-    offline: 'bg-gray-500'
+    online: 'bg-[#FFD600]',
+    busy: 'bg-[#EA580C]',
+    task: 'bg-[#F7931A]',
+    offline: 'bg-[#1E293B]'
   };
   
   return (
     <div className="absolute group cursor-pointer" style={{ top, left }}>
       <div className="relative flex flex-col items-center">
         {/* Tooltip */}
-        <div className="absolute bottom-full mb-3 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 bg-[#1e293b] text-sm p-3 rounded-xl border border-white/10 shadow-2xl whitespace-nowrap z-10 min-w-[150px]">
-          <p className="font-bold text-white">{name}</p>
-          <p className="text-white/60 text-xs">{role}</p>
-          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/10">
+        <div className="absolute bottom-full mb-3 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 bg-[#030304]/90 backdrop-blur-md text-sm p-4 rounded-xl border border-[#1E293B] shadow-[0_0_30px_rgba(247,147,26,0.2)] whitespace-nowrap z-10 min-w-[150px]">
+          <p className="font-heading font-bold text-white">{name}</p>
+          <p className="text-[#F7931A] font-mono text-[10px] uppercase tracking-widest mt-1">{role}</p>
+          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[#1E293B]">
             <button 
               onClick={onCall}
-              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs flex items-center justify-center gap-2 transition-colors"
+              className="flex-1 btn-primary py-2 text-[11px] tracking-widest flex items-center justify-center gap-2"
             >
-              <PhoneCall size={12} /> Call
+              <PhoneCall size={12} /> INITIATE LINK
             </button>
           </div>
         </div>
         
         {/* Marker */}
-        <div className="w-10 h-10 rounded-full border-2 border-white bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)] relative z-0 hover:scale-110 transition-transform">
-          <span className="text-sm font-bold text-white">{name.substring(0,2).toUpperCase()}</span>
+        <div className="w-12 h-12 rounded-full border border-[#F7931A] bg-gradient-to-tr from-[#EA580C] to-[#F7931A] flex items-center justify-center shadow-[0_0_20px_rgba(234,88,12,0.6)] relative z-0 hover:scale-110 transition-transform">
+          <span className="text-sm font-heading font-bold text-white">{name.substring(0,2).toUpperCase()}</span>
         </div>
-        <div className={`w-3.5 h-3.5 rounded-full border-2 border-[#1a1d24] absolute -bottom-1 -right-1 ${statusColors[status]}`}></div>
+        <div className={`w-4 h-4 rounded-full border-2 border-[#0F1115] absolute -bottom-1 -right-1 ${statusColors[status]} shadow-[0_0_10px_currentColor]`}></div>
       </div>
     </div>
   );

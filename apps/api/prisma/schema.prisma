@@ -60,7 +60,8 @@ model User {
   email             String             @unique
   phone             String?
   passwordHash      String
-  role              Role
+  roles             Role[]             @default([CITIZEN])
+  designations      String[]           @default([])
   departmentId      String?
   department        Department?        @relation(fields: [departmentId], references: [id])
   profilePhotoUrl   String?
@@ -136,6 +137,11 @@ enum IssueStatus {
   REJECTED
 }
 
+enum IssueType {
+  ISSUE
+  TASK
+}
+
 model Issue {
   id           String    @id @default(uuid())
   issueNumber  String    @unique @default(cuid())
@@ -154,6 +160,8 @@ model Issue {
   priority     Priority  @default(MEDIUM)
   status       IssueStatus @default(REPORTED)
   category     String?
+  type         IssueType @default(ISSUE)
+  restrictToRole Role?
   
   locationLat  Float?
   locationLng  Float?

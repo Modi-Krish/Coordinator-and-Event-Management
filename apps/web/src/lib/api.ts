@@ -19,12 +19,18 @@ export async function fetchAPI(endpoint: string, options: RequestInit = {}) {
   });
 
   if (!res.ok) {
+    if (res.status === 401 && typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.reload();
+    }
+
     // Attempt to parse error JSON
     let errorMsg = `API error: ${res.status} ${res.statusText}`;
     try {
       const errorData = await res.json();
       if (errorData.message) errorMsg = Array.isArray(errorData.message) ? errorData.message.join(', ') : errorData.message;
-    } catch (e) {}
+    } catch (_e) {}
     throw new Error(errorMsg);
   }
 

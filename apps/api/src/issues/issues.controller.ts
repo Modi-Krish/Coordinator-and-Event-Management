@@ -1,10 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, UseGuards, Request, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, UseInterceptors, UploadedFile, Query } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { IssuesService } from './issues.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { Role, IssueStatus } from '@prisma/client';
+import { Role, IssueStatus, Priority } from '@prisma/client';
 
 @Controller('issues')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -18,8 +18,8 @@ export class IssuesController {
   }
 
   @Get()
-  async getIssues(@Request() req: any) {
-    return this.issuesService.getIssues(req.user);
+  async getIssues(@Request() req: any, @Query('type') type?: any) {
+    return this.issuesService.getIssues(req.user, type);
   }
 
   @Get(':id')
@@ -36,6 +36,16 @@ export class IssuesController {
     return this.issuesService.updateIssueStatus(req.user, id, status);
   }
 
+  @Patch(':id/priority')
+  @Roles(Role.STAFF, Role.SUPERVISOR, Role.ADMIN)
+  async updatePriority(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Body('priority') priority: Priority,
+  ) {
+    return this.issuesService.updateIssuePriority(req.user, id, priority);
+  }
+
   @Post(':id/attachments')
   @UseInterceptors(FileInterceptor('file'))
   async uploadAttachment(
@@ -44,5 +54,10 @@ export class IssuesController {
     @UploadedFile() file: Express.Multer.File
   ) {
     return this.issuesService.uploadAttachment(req.user, id, file);
+  }
+
+  @Delete(':id')
+  async deleteIssue(@Request() req: any, @Param('id') id: string) {
+    return this.issuesService.deleteIssue(req.user, id);
   }
 }

@@ -67,105 +67,107 @@ export default function TeamPage() {
 
   const getStatusColor = (status: string) => {
     switch(status) {
-      case 'online': return 'bg-green-500';
-      case 'busy': return 'bg-yellow-500';
-      case 'task': return 'bg-blue-500';
-      default: return 'bg-gray-500';
+      case 'online': return 'bg-[#FFD600] shadow-[0_0_10px_rgba(255,214,0,0.8)]';
+      case 'busy': return 'bg-[#EA580C] shadow-[0_0_10px_rgba(234,88,12,0.8)]';
+      case 'task': return 'bg-[#F7931A] shadow-[0_0_10px_rgba(247,147,26,0.8)]';
+      default: return 'bg-[#1E293B]';
     }
   };
 
   return (
     <div className="max-w-7xl mx-auto pb-12">
-      <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Team Directory</h1>
-          <p className="text-white/60 mt-1">Manage and communicate with your coordinators</p>
+          <h1 className="text-4xl font-heading font-bold text-white tracking-tight">
+            Team <span className="text-gradient">Directory</span>
+          </h1>
+          <p className="text-[#94A3B8] font-mono text-sm mt-2 tracking-wide uppercase">Manage and communicate with your coordinators</p>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" size={18} />
+        <div className="flex flex-col sm:flex-row gap-4 mt-4 md:mt-0">
+          <div className="relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#F7931A] group-focus-within:text-[#FFD600] transition-colors" size={18} />
             <input 
               type="text" 
               placeholder="Search team..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-blue-500 w-full md:w-64"
+              className="crypto-input !pl-12 pr-4 w-full md:w-64"
             />
           </div>
           
-          <button className="glass-panel px-4 py-2 flex items-center justify-center gap-2 text-sm font-medium hover:bg-white/10 transition-colors">
-            <Filter size={16} /> Roles
+          <button className="btn-outline text-[13px]">
+            <Filter size={16} className="mr-2" /> Roles
           </button>
 
           {currentUser?.role === 'ADMIN' && (
             <button 
               onClick={() => setShowAddModal(true)}
-              className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors"
+              className="btn-primary flex items-center justify-center gap-2"
             >
-              <Plus size={16} /> Add User
+              <Plus size={16} /> Add Node
             </button>
           )}
         </div>
       </header>
 
       {isLoading ? (
-        <div className="text-center py-20 text-white/50">Loading team...</div>
+        <div className="text-center py-20 font-mono text-[#F7931A] animate-pulse uppercase tracking-widest text-sm">Synchronizing network...</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {teamMembers.filter(member => 
             member.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
             member.role.toLowerCase().includes(searchTerm.toLowerCase())
           ).map(member => (
-          <div key={member.id} className="glass-panel p-6 flex flex-col items-center text-center group hover:-translate-y-1 transition-transform duration-300">
-            <div className="absolute top-4 right-4 text-white/40 hover:text-white cursor-pointer transition-colors">
+          <div key={member.id} className="crypto-card flex flex-col items-center text-center group hover:-translate-y-1 transition-transform duration-300">
+            <div className="absolute top-4 right-4 text-[#94A3B8] hover:text-[#F7931A] cursor-pointer transition-colors">
               <MoreVertical size={18} />
             </div>
             
-            <div className="relative mb-4">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)]">
-                <span className="text-2xl font-bold text-white">{member.name.substring(0,2).toUpperCase()}</span>
+            <div className="relative mb-5 mt-2">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-[#EA580C] to-[#F7931A] flex items-center justify-center shadow-[0_0_20px_rgba(247,147,26,0.4)] group-hover:scale-105 transition-transform">
+                <span className="text-3xl font-heading font-bold text-white">{member.name.substring(0,2).toUpperCase()}</span>
               </div>
-              <div className={`absolute bottom-0 right-1 w-5 h-5 rounded-full border-4 border-[#0f1115] ${getStatusColor(member.status)}`}></div>
+              <div className={`absolute bottom-0 right-2 w-5 h-5 rounded-full border-4 border-[#0F1115] ${getStatusColor(member.status)}`}></div>
             </div>
             
-            <h3 className="text-lg font-bold text-white mb-1">{member.name}</h3>
+            <h3 className="text-lg font-heading font-bold text-white mb-1 group-hover:text-[#F7931A] transition-colors">{member.name}</h3>
             
-            <span className="text-xs font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-1 rounded-full mb-4 flex items-center gap-1">
-              {member.role === 'ADMIN' && <Shield size={10} />}
+            <span className="text-[10px] font-mono font-bold text-[#F7931A] bg-[#EA580C]/10 border border-[#EA580C]/30 px-3 py-1.5 rounded-full mb-5 flex items-center gap-2 uppercase tracking-widest">
+              {member.role === 'ADMIN' && <Shield size={12} />}
               {member.role === 'ADMIN' ? 'Manager' : member.role === 'SUPERVISOR' ? 'Faculty' : member.role === 'STAFF' ? 'Staff' : 'Citizen'}
             </span>
             
-            <div className="w-full space-y-2 mb-6">
-              <div className="flex items-center justify-center gap-2 text-sm text-white/60">
-                <Mail size={14} />
+            <div className="w-full space-y-3 mb-6 bg-[#030304] p-4 rounded-lg border border-[#1E293B]">
+              <div className="flex items-center justify-center gap-3 text-xs font-mono text-[#94A3B8]">
+                <Mail size={14} className="text-[#EA580C]" />
                 <span className="truncate">{member.email}</span>
               </div>
               {member.phone && (
-                <div className="flex items-center justify-center gap-2 text-sm text-white/60">
-                  <PhoneCall size={14} />
+                <div className="flex items-center justify-center gap-3 text-xs font-mono text-[#94A3B8]">
+                  <PhoneCall size={14} className="text-[#EA580C]" />
                   <span>{member.phone}</span>
                 </div>
               )}
             </div>
             
-            <div className="flex gap-2 w-full mt-auto">
-              <button className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm">
-                <MessageSquare size={16} /> Chat
+            <div className="flex gap-3 w-full mt-auto">
+              <button className="flex-1 bg-transparent hover:bg-white/5 border border-[#1E293B] hover:border-[#FFD600]/30 text-[#94A3B8] hover:text-[#FFD600] py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all text-xs font-mono tracking-widest uppercase">
+                <MessageSquare size={14} /> Chat
               </button>
               <button 
                 onClick={() => initiateCall(member.id, member.name, false)}
-                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm font-medium"
+                className="flex-1 btn-primary py-2.5 text-xs tracking-widest flex items-center justify-center gap-2"
               >
-                <PhoneCall size={16} /> Call
+                <PhoneCall size={14} /> Call
               </button>
             </div>
           </div>
         ))}
         
         {teamMembers.length === 0 && (
-          <div className="col-span-full text-center py-12 text-white/50">
-            No team members found in your hierarchy.
+          <div className="col-span-full text-center py-12 font-mono text-[11px] text-[#94A3B8] uppercase tracking-widest">
+            No active nodes found in your hierarchy.
           </div>
         )}
         </div>
@@ -173,63 +175,63 @@ export default function TeamPage() {
 
       {/* Add User Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-panel w-full max-w-md relative animate-in zoom-in duration-200">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="crypto-card w-full max-w-md relative animate-in zoom-in duration-200 !p-0 overflow-hidden">
             <button 
               onClick={() => setShowAddModal(false)}
-              className="absolute right-4 top-4 text-white/50 hover:text-white"
+              className="absolute right-4 top-4 text-[#94A3B8] hover:text-[#F7931A] z-10"
             >
               <X size={20} />
             </button>
             
-            <div className="p-6 border-b border-white/10">
-              <h2 className="text-xl font-bold text-white">Add Team Member</h2>
-              <p className="text-sm text-white/60">Create a new user under your hierarchy</p>
+            <div className="p-6 border-b border-[#1E293B] bg-black/40">
+              <h2 className="text-xl font-heading font-bold text-white tracking-wide">Register Node</h2>
+              <p className="text-[11px] font-mono text-[#94A3B8] uppercase tracking-widest mt-1">Create a new user under your hierarchy</p>
             </div>
             
-            <form onSubmit={handleAddUser} className="p-6 space-y-4">
+            <form onSubmit={handleAddUser} className="p-6 space-y-5">
               <div>
-                <label className="block text-xs font-medium text-white/60 mb-1">Full Name</label>
+                <label className="block text-[10px] font-mono font-bold text-[#F7931A] uppercase tracking-widest mb-2">Full Name</label>
                 <input 
                   type="text" required 
                   value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:outline-none" 
+                  className="crypto-input w-full" 
                 />
               </div>
               
               <div>
-                <label className="block text-xs font-medium text-white/60 mb-1">Email Address</label>
+                <label className="block text-[10px] font-mono font-bold text-[#F7931A] uppercase tracking-widest mb-2">Email Address</label>
                 <input 
                   type="email" required 
                   value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:outline-none" 
+                  className="crypto-input w-full" 
                 />
               </div>
               
               <div>
-                <label className="block text-xs font-medium text-white/60 mb-1">Role</label>
+                <label className="block text-[10px] font-mono font-bold text-[#F7931A] uppercase tracking-widest mb-2">Role</label>
                 <select 
                   value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                  className="crypto-input w-full"
                 >
-                  <option value="SUPERVISOR" className="bg-[#0f1115]">Faculty (Supervisor)</option>
-                  <option value="STAFF" className="bg-[#0f1115]">Staff (Core Member/Intern/Coordinator)</option>
-                  <option value="CITIZEN" className="bg-[#0f1115]">Student</option>
+                  <option value="SUPERVISOR" className="bg-[#030304]">Faculty (Supervisor)</option>
+                  <option value="STAFF" className="bg-[#030304]">Staff (Core Member/Coordinator)</option>
+                  <option value="CITIZEN" className="bg-[#030304]">Student</option>
                 </select>
               </div>
 
               {/* Hierarchy Assignment */}
               {currentUser?.role === 'ADMIN' && formData.role === 'STAFF' && (
                 <div>
-                  <label className="block text-xs font-medium text-white/60 mb-1">Assign To (Reporting Faculty)</label>
+                  <label className="block text-[10px] font-mono font-bold text-[#F7931A] uppercase tracking-widest mb-2">Assign To (Reporting Faculty)</label>
                   <select 
                     value={formData.reportingManagerId} onChange={e => setFormData({...formData, reportingManagerId: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                    className="crypto-input w-full"
                   >
-                    <option value="" className="bg-[#0f1115]">Directly to Me (Manager)</option>
-                    <optgroup label="Faculty Members">
+                    <option value="" className="bg-[#030304]">Directly to Me (Manager)</option>
+                    <optgroup label="Faculty Members" className="bg-[#030304]">
                       {teamMembers.filter(m => m.role === 'SUPERVISOR').map(faculty => (
-                        <option key={faculty.id} value={faculty.id} className="bg-[#0f1115]">{faculty.name}</option>
+                        <option key={faculty.id} value={faculty.id} className="bg-[#030304]">{faculty.name}</option>
                       ))}
                     </optgroup>
                   </select>
@@ -239,13 +241,13 @@ export default function TeamPage() {
               <div className="pt-4 flex gap-3">
                 <button 
                   type="button" onClick={() => setShowAddModal(false)}
-                  className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white font-medium transition-colors"
+                  className="flex-1 btn-outline"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-bold transition-colors shadow-lg shadow-blue-500/20"
+                  className="flex-1 btn-primary"
                 >
                   Create User
                 </button>

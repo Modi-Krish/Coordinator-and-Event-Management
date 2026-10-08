@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { IssueStatus, Role } from '@prisma/client';
+import { IssueStatus, Role, IssueType, Priority } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { Inject } from '@nestjs/common';
@@ -19,13 +19,35 @@ export class IssuesService {
   async reportIssue(userId: string, data: any) {
     let assigneeId = data.assignedToId;
 
-    if (!assigneeId) {
-      // Basic assignment logic: Find a coordinator to assign this to
-      const availableCoordinator = await this.prisma.user.findFirst({
-        where: { role: Role.STAFF },
-        orderBy: { assignedIssues: { _count: 'asc' } } // Load balancing based on active issues
+    let type = data.type || IssueType.ISSUE;
+    
+    // Auto-assign Student (CITIZEN) issues to Coordinators via Round-Robin
+    if (!assigneeId && type === IssueType.ISSUE) {
+      // Find all coordinators in the ward/city
+      const coordinators = await this.prisma.user.findMany({
+        where: { 
+          roles: { has: Role.STAFF },
+          designations: { has: 'COORDINATOR' }
+        },
+        orderBy: { id: 'asc' }
       });
-      assigneeId = availableCoordinator?.id || null;
+
+      if (coordinators.length > 0) {
+        // Find the last assigned issue to any coordinator
+        const lastIssue = await this.prisma.issue.findFirst({
+          where: { type: IssueType.ISSUE, assignedToId: { in: coordinators.map(c => c.id) } },
+          orderBy: { createdAt: 'desc' },
+          select: { assignedToId: true }
+        });
+
+        if (!lastIssue || !lastIssue.assignedToId) {
+          assigneeId = coordinators[0].id;
+        } else {
+          const lastIdx = coordinators.findIndex(c => c.id === lastIssue.assignedToId);
+          const nextIdx = (lastIdx + 1) % coordinators.length;
+          assigneeId = coordinators[nextIdx].id;
+        }
+      }
     }
 
     const status = assigneeId ? IssueStatus.ASSIGNED : IssueStatus.REPORTED;
@@ -41,6 +63,8 @@ export class IssuesService {
         reportedById: userId,
         assignedToId: assigneeId,
         status,
+        type,
+        restrictToRole: data.restrictToRole || null,
       },
     });
 
@@ -60,21 +84,22 @@ export class IssuesService {
     return issue;
   }
 
-  async getIssues(user: any) {
+  async getIssues(user: any, type?: any) {
     // Basic RBAC for issue visibility
-    if (user.role === Role.SUPERVISOR || user.role === Role.ADMIN) {
-      return this.prisma.issue.findMany();
-    } else if (user.role === Role.STAFF) {
-      return this.prisma.issue.findMany({
-        where: { assignedToId: user.userId },
-      });
-    } else if (user.role === Role.CITIZEN) {
-      return this.prisma.issue.findMany({
-        where: { reportedById: user.userId },
-      });
+    let query: any = { where: {} };
+    if (type) query.where.type = type;
+
+    if (user.roles.includes(Role.SUPERVISOR) || user.roles.includes(Role.ADMIN)) {
+      // see all
+    } else if (user.roles.includes(Role.STAFF)) {
+      query.where.OR = [
+        { assignedToId: user.userId },
+      ];
+    } else if (user.roles.includes(Role.CITIZEN)) {
+      query.where.reportedById = user.userId;
     }
-    // Other roles would need hierarchy resolution
-    return this.prisma.issue.findMany();
+    
+    return this.prisma.issue.findMany(query);
   }
 
   async getIssueById(issueId: string) {
@@ -91,10 +116,14 @@ export class IssuesService {
     
     const isOwner = issue.reportedById === user.userId;
     const isAssignee = issue.assignedToId === user.userId;
-    const isSupervisorOrAdmin = user.role === Role.SUPERVISOR || user.role === Role.ADMIN;
+    const isSupervisorOrAdmin = user.roles.includes(Role.SUPERVISOR) || user.roles.includes(Role.ADMIN);
     
     if (!isOwner && !isAssignee && !isSupervisorOrAdmin) {
       throw new ForbiddenException('Not authorized to update this issue');
+    }
+    
+    if (issue.restrictToRole && !user.roles.includes(issue.restrictToRole) && !user.roles.includes(Role.ADMIN)) {
+      throw new ForbiddenException(`This task is restricted to ${issue.restrictToRole} level`);
     }
     
     if (status === IssueStatus.VERIFIED && !isSupervisorOrAdmin) {
@@ -116,13 +145,33 @@ export class IssuesService {
     return updatedIssue;
   }
 
+  async updateIssuePriority(user: any, issueId: string, priority: Priority) {
+    const _issue = await this.getIssueById(issueId);
+
+    const isSupervisorOrAdmin = user.roles.includes(Role.SUPERVISOR) || user.roles.includes(Role.ADMIN);
+    const isStaff = user.roles.includes(Role.STAFF);
+
+    if (!isSupervisorOrAdmin && !isStaff) {
+      throw new ForbiddenException('Not authorized to update issue priority');
+    }
+
+    const updatedIssue = await this.prisma.issue.update({
+      where: { id: issueId },
+      data: { priority },
+    });
+
+    this.realtimeGateway.server.emit('issue:updated', updatedIssue);
+
+    return updatedIssue;
+  }
+
   async uploadAttachment(user: any, issueId: string, file: Express.Multer.File) {
     const issue = await this.getIssueById(issueId);
     
     // Only related users can upload attachments
     const isOwner = issue.reportedById === user.userId;
     const isAssignee = issue.assignedToId === user.userId;
-    const isSupervisorOrAdmin = user.role === Role.SUPERVISOR || user.role === Role.ADMIN;
+    const isSupervisorOrAdmin = user.roles.includes(Role.SUPERVISOR) || user.roles.includes(Role.ADMIN);
     
     if (!isOwner && !isAssignee && !isSupervisorOrAdmin) {
       throw new ForbiddenException('Not authorized to upload attachments for this issue');
@@ -142,5 +191,27 @@ export class IssuesService {
     });
 
     return attachment;
+  }
+
+  async deleteIssue(user: any, issueId: string) {
+    const issue = await this.getIssueById(issueId);
+    
+    const isOwner = issue.reportedById === user.userId;
+    const isAdminOrSupervisor = user.roles.includes(Role.ADMIN) || user.roles.includes(Role.SUPERVISOR);
+    
+    if (!isOwner && !isAdminOrSupervisor) {
+      throw new ForbiddenException('Not authorized to delete this issue');
+    }
+
+    // Delete related attachments and notifications first due to FK constraints
+    await this.prisma.issueAttachment.deleteMany({ where: { issueId } });
+    await this.prisma.notification.deleteMany({ where: { referenceId: issueId, referenceType: 'ISSUE' } });
+    
+    await this.prisma.issue.delete({ where: { id: issueId } });
+    
+    // Broadcast deletion
+    this.realtimeGateway.server.emit('issue:deleted', issueId);
+    
+    return { success: true };
   }
 }

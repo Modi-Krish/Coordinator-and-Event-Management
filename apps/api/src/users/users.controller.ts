@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Request, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, UseGuards, Request } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -24,11 +24,21 @@ export class UsersController {
 
   @Get('team')
   async getMyTeam(@Request() req: any) {
-    return this.usersService.getMyTeam(req.user.userId, req.user.role);
+    return this.usersService.getMyTeam(req.user.userId, req.user.roles);
   }
 
   @Get('hierarchy')
   async getHierarchy(@Request() req: any) {
     return this.usersService.getHierarchy(req.user.userId);
+  }
+
+  @Patch(':id/roles')
+  @Roles(Role.ADMIN)
+  async updateRolesAndDesignations(
+    @Param('id') id: string,
+    @Body('roles') roles?: Role[],
+    @Body('designations') designations?: string[],
+  ) {
+    return this.usersService.updateRolesAndDesignations(id, roles, designations);
   }
 }

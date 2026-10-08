@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { Role } from '@prisma/client';
@@ -23,7 +23,8 @@ export class UsersService {
         name: data.name,
         phone: data.phone,
         passwordHash: hashedPassword,
-        role: data.role,
+        roles: data.roles || (data.role ? [data.role] : [Role.STAFF]),
+        designations: data.designations || (data.designation ? [data.designation] : []),
         departmentId: data.departmentId,
       },
     });
@@ -42,8 +43,8 @@ export class UsersService {
     return user;
   }
 
-  async getMyTeam(userId: string, role: Role) {
-    if (role === Role.SUPERVISOR || role === Role.ADMIN) {
+  async getMyTeam(userId: string, roles: Role[]) {
+    if (roles.includes(Role.SUPERVISOR) || roles.includes(Role.ADMIN)) {
       return this.prisma.user.findMany(); // Manager sees all
     }
 
@@ -75,5 +76,18 @@ export class UsersService {
       }
     });
     return relations;
+  }
+
+  async updateRolesAndDesignations(userId: string, roles?: Role[], designations?: string[]) {
+    const data: any = {};
+    if (roles) data.roles = roles;
+    if (designations) data.designations = designations;
+
+    if (Object.keys(data).length === 0) return null;
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data,
+    });
   }
 }

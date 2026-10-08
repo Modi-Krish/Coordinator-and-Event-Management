@@ -11,6 +11,14 @@ import {
 } from "lucide-react";
 import { fetchAPI } from "@/lib/api";
 import { useSocket } from "@/components/SocketProvider";
+import Map, { Marker } from "react-map-gl/maplibre";
+import 'maplibre-gl/dist/maplibre-gl.css';
+import * as maplibregl from 'maplibre-gl';
+import { setWorkerUrl } from 'maplibre-gl';
+
+if (typeof window !== 'undefined') {
+  setWorkerUrl("https://unpkg.com/maplibre-gl/dist/maplibre-gl-csp-worker.js");
+}
 
 export default function Dashboard() {
   const [issues, setIssues] = useState<any[]>([]);
@@ -74,79 +82,62 @@ export default function Dashboard() {
   const activeIssuePoints = activeIssues.filter(i => i.locationLat != null && i.locationLng != null);
   const totalLocatedPoints = activeUserPoints.length + activeIssuePoints.length;
 
-  const getMapCoordinates = (lat: number, lng: number) => {
-    const allLats = [
-      ...activeUserPoints.map(u => u.lat as number),
-      ...activeIssuePoints.map(i => i.locationLat as number)
-    ];
-    const allLngs = [
-      ...activeUserPoints.map(u => u.lng as number),
-      ...activeIssuePoints.map(i => i.locationLng as number)
-    ];
+  const allLats = [
+    ...activeUserPoints.map(u => u.lat as number),
+    ...activeIssuePoints.map(i => i.locationLat as number)
+  ];
+  const allLngs = [
+    ...activeUserPoints.map(u => u.lng as number),
+    ...activeIssuePoints.map(i => i.locationLng as number)
+  ];
 
-    if (allLats.length <= 1) {
-      return { top: '50%', left: '50%' };
-    }
-
-    const minLat = Math.min(...allLats);
-    const maxLat = Math.max(...allLats);
-    const minLng = Math.min(...allLngs);
-    const maxLng = Math.max(...allLngs);
-
-    const latSpan = Math.max(maxLat - minLat, 0.005);
-    const lngSpan = Math.max(maxLng - minLng, 0.005);
-
-    const top = 82 - ((lat - minLat) / latSpan) * 64;
-    const left = 18 + ((lng - minLng) / lngSpan) * 64;
-
-    return { 
-      top: `${Math.max(10, Math.min(90, top))}%`, 
-      left: `${Math.max(10, Math.min(90, left))}%` 
-    };
-  };
+  const defaultLat = allLats.length > 0 ? allLats.reduce((a,b)=>a+b)/allLats.length : 37.7749;
+  const defaultLng = allLngs.length > 0 ? allLngs.reduce((a,b)=>a+b)/allLngs.length : -122.4194;
 
   if (isLoading) {
     return <div className="p-8 text-white/50">Loading dashboard data...</div>;
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      <header className="flex justify-between items-end mb-8">
+    <div className="space-y-8 max-w-7xl mx-auto pb-12">
+      <header className="flex justify-between items-end mb-10">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Organization Overview</h1>
-          <p className="text-white/60 mt-1">Real-time operational dashboard</p>
+          <h1 className="text-4xl md:text-5xl font-heading font-bold text-white tracking-tight">
+            Organization <span className="text-gradient">Overview</span>
+          </h1>
+          <p className="text-[#94A3B8] font-mono text-sm mt-2 tracking-wide uppercase">Real-time operational terminal</p>
         </div>
-        <div className="flex gap-3">
-          <button className="glass-panel px-4 py-2 text-sm font-medium hover:bg-white/10 transition-colors">
+        <div className="flex gap-4">
+          <button className="btn-outline">
             Generate Report
           </button>
-          <button className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-[0_0_15px_rgba(37,99,235,0.4)]">
+          <button className="btn-primary">
             Assign Task
           </button>
         </div>
       </header>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
           title="Active Team" 
           value={users.length.toString()} 
           subtitle="Registered members" 
-          icon={<UsersIcon className="text-blue-400" size={24} />} 
+          icon={<UsersIcon className="text-[#F7931A]" size={24} />} 
           trend="0"
         />
         <StatCard 
           title="In Progress" 
           value={inProgressIssues.length.toString()} 
           subtitle="Issues being handled" 
-          icon={<CheckCircle className="text-green-400" size={24} />} 
+          icon={<CheckCircle className="text-[#FFD600]" size={24} />} 
           trend="0"
         />
         <StatCard 
           title="Open Issues" 
           value={activeIssues.length.toString()} 
           subtitle="Requires attention" 
-          icon={<AlertTriangle className="text-red-400" size={24} />} 
+          icon={<AlertTriangle className="text-[#EA580C]" size={24} />} 
           trend="0"
           alert={criticalIssues.length > 0}
         />
@@ -154,51 +145,53 @@ export default function Dashboard() {
           title="Avg Resolution" 
           value="--" 
           subtitle="Not enough data" 
-          icon={<Clock className="text-purple-400" size={24} />} 
+          icon={<Clock className="text-[#94A3B8]" size={24} />} 
           trend="0"
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Map Area */}
-        <div className="lg:col-span-2 glass-panel p-1 flex flex-col h-[500px]">
-          <div className="p-4 border-b border-white/10 flex justify-between items-center bg-black/20 rounded-t-[15px]">
-            <h2 className="font-semibold flex items-center gap-2">
-              <MapPin size={18} className="text-blue-400" />
+        <div className="lg:col-span-2 crypto-card !p-1 flex flex-col h-[500px] overflow-hidden">
+          <div className="p-4 border-b border-[#1E293B] flex justify-between items-center bg-black/40">
+            <h2 className="font-heading font-semibold flex items-center gap-2 tracking-wide text-lg">
+              <MapPin size={18} className="text-[#F7931A]" />
               Live Team Location
             </h2>
             <div className="flex gap-2">
-              <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full border border-blue-500/30">Coordinators</span>
-              <span className="text-xs bg-red-500/20 text-red-300 px-2 py-1 rounded-full border border-red-500/30">Issues</span>
+              <span className="text-[10px] font-mono bg-[#EA580C]/20 text-[#F7931A] px-2.5 py-1 rounded-full border border-[#EA580C]/30 uppercase tracking-widest">Coordinators</span>
+              <span className="text-[10px] font-mono bg-red-500/20 text-red-300 px-2.5 py-1 rounded-full border border-red-500/30 uppercase tracking-widest">Issues</span>
             </div>
           </div>
-          <div className="flex-1 bg-[#1a1d24] relative overflow-hidden rounded-b-[15px]">
-            {/* Mock Map Background */}
-            <div className="absolute inset-0 opacity-20" style={{
-              backgroundImage: 'url("https://www.transparenttextures.com/patterns/cartographer.png")',
-              backgroundSize: '300px'
-            }}></div>
-            
-            {/* Real Issue Markers with captured coordinates */}
-            {activeIssuePoints.map((issue) => {
-              const coords = getMapCoordinates(issue.locationLat, issue.locationLng);
-              return (
-              <div key={issue.id} className="absolute flex flex-col items-center animate-pulse" style={{ top: coords.top, left: coords.left }}>
-                <div className="w-4 h-4 bg-red-500 rounded-full shadow-[0_0_15px_rgba(239,68,68,1)] border-2 border-white"></div>
-                <span className="text-[10px] font-bold mt-1 bg-red-500/80 px-1 rounded backdrop-blur-md">{issue.title}</span>
-              </div>
-            )})}
-            
-            {/* Real User Markers */}
-            {activeUserPoints.map((u) => {
-              const coords = getMapCoordinates(u.lat!, u.lng!);
-              return (
-              <div key={u.id} className="absolute flex flex-col items-center" style={{ top: coords.top, left: coords.left }}>
-                <div className="w-6 h-6 rounded-full border-2 border-white bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
-                  <span className="text-[8px] font-bold text-white">{u.name?.substring(0,2).toUpperCase()}</span>
-                </div>
-              </div>
-            )})}
+          <div className="flex-1 relative overflow-hidden">
+            <Map
+              initialViewState={{
+                longitude: defaultLng,
+                latitude: defaultLat,
+                zoom: 12
+              }}
+              mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
+              style={{ width: '100%', height: '100%' }}
+            >
+              {/* Real Issue Markers with captured coordinates */}
+              {activeIssuePoints.map((issue) => (
+                <Marker key={issue.id} longitude={issue.locationLng} latitude={issue.locationLat} anchor="bottom">
+                  <div className="flex flex-col items-center animate-pulse cursor-pointer">
+                    <span className="text-[10px] font-mono font-bold mb-1 bg-[#030304]/80 text-[#94A3B8] px-2 py-0.5 rounded border border-[#1E293B] backdrop-blur-md">{issue.title}</span>
+                    <div className="w-4 h-4 bg-red-500 rounded-full shadow-[0_0_20px_rgba(239,68,68,0.8)] border-2 border-white/20"></div>
+                  </div>
+                </Marker>
+              ))}
+              
+              {/* Real User Markers */}
+              {activeUserPoints.map((u) => (
+                <Marker key={u.id} longitude={u.lng!} latitude={u.lat!} anchor="center">
+                  <div className="w-8 h-8 rounded-full border border-[#F7931A] bg-gradient-to-tr from-[#EA580C] to-[#F7931A] flex items-center justify-center shadow-[0_0_20px_rgba(234,88,12,0.6)] cursor-pointer">
+                    <span className="text-[10px] font-bold text-white tracking-widest">{u.name?.substring(0,2).toUpperCase()}</span>
+                  </div>
+                </Marker>
+              ))}
+            </Map>
 
             {totalLocatedPoints === 0 && (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 text-white/40">
@@ -209,14 +202,14 @@ export default function Dashboard() {
             )}
             
             {/* UI Overlay on map */}
-            <div className="absolute bottom-4 left-4 glass-panel p-3 text-xs">
-              <p className="text-white/70 mb-1 font-medium">Tracking Status</p>
-              <div className="flex items-center gap-2 text-green-400">
+            <div className="absolute bottom-4 left-4 glass-card !p-3 text-xs">
+              <p className="text-[#94A3B8] mb-1 font-mono uppercase tracking-widest text-[10px]">Tracking Status</p>
+              <div className="flex items-center gap-2 font-mono text-[#F7931A]">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F7931A] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#EA580C]"></span>
                 </span>
-                Live Sync Active
+                LIVE NETWORK ACTIVE
               </div>
             </div>
           </div>
@@ -224,9 +217,9 @@ export default function Dashboard() {
 
         {/* Side Panel: Escalations & Team */}
         <div className="space-y-6">
-          <div className="glass-panel p-5">
-            <h2 className="font-semibold mb-4 flex items-center gap-2">
-              <AlertTriangle size={18} className="text-red-400" />
+          <div className="crypto-card">
+            <h2 className="font-heading font-semibold mb-6 flex items-center gap-2 text-lg">
+              <AlertTriangle size={18} className="text-[#EA580C]" />
               Recent Escalations
             </h2>
             <div className="space-y-4">
@@ -240,10 +233,10 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="glass-panel p-5">
-            <h2 className="font-semibold mb-4 flex items-center gap-2">
-              <UsersIcon size={18} className="text-blue-400" />
-              Priority Team
+          <div className="crypto-card">
+            <h2 className="font-heading font-semibold mb-6 flex items-center gap-2 text-lg">
+              <UsersIcon size={18} className="text-[#F7931A]" />
+              Priority Node Operators
             </h2>
             <div className="space-y-4">
               {users.length === 0 ? (
@@ -263,20 +256,20 @@ export default function Dashboard() {
 
 function StatCard({ title, value, subtitle, icon, trend, alert }: any) {
   return (
-    <div className={`glass-panel p-5 relative overflow-hidden ${alert ? 'ring-1 ring-red-500/50' : ''}`}>
-      {alert && <div className="absolute top-0 right-0 w-16 h-16 bg-red-500/20 blur-2xl rounded-full"></div>}
-      <div className="flex justify-between items-start">
+    <div className={`crypto-card node-accent-tl group ${alert ? 'border-[#EA580C]/50 shadow-[0_0_20px_rgba(234,88,12,0.15)]' : ''}`}>
+      {alert && <div className="absolute top-0 right-0 w-24 h-24 bg-[#EA580C]/10 blur-2xl rounded-full"></div>}
+      <div className="flex justify-between items-start relative z-10">
         <div>
-          <p className="text-sm text-white/60 font-medium">{title}</p>
-          <h3 className="text-3xl font-bold mt-1 text-white">{value}</h3>
+          <p className="text-[11px] font-mono text-[#94A3B8] uppercase tracking-widest">{title}</p>
+          <h3 className="text-4xl font-heading font-bold mt-2 text-white group-hover:text-[#F7931A] transition-colors">{value}</h3>
         </div>
-        <div className="p-2 bg-white/5 rounded-lg border border-white/10">
+        <div className="p-3 bg-[#030304] rounded-lg border border-[#1E293B] group-hover:border-[#F7931A]/30 group-hover:shadow-[0_0_15px_rgba(247,147,26,0.3)] transition-all">
           {icon}
         </div>
       </div>
-      <div className="mt-4 flex items-center justify-between text-xs">
-        <span className="text-white/50">{subtitle}</span>
-        <span className={`font-medium ${trend.startsWith('+') ? 'text-green-400' : 'text-blue-400'} ${alert && trend.startsWith('+') ? 'text-red-400' : ''}`}>
+      <div className="mt-6 pt-4 border-t border-[#1E293B] flex items-center justify-between text-xs">
+        <span className="text-[#94A3B8] font-mono text-[10px] uppercase tracking-wide">{subtitle}</span>
+        <span className={`font-mono font-medium ${trend.startsWith('+') ? 'text-[#FFD600]' : 'text-[#F7931A]'}`}>
           {trend}
         </span>
       </div>
@@ -318,42 +311,42 @@ function MapMarker({ top, left, role, name, status }: any) {
 
 function EscalationItem({ title, location, time }: any) {
   return (
-    <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors cursor-pointer border border-transparent hover:border-white/5">
-      <div className="mt-1 bg-red-500/20 p-2 rounded-full border border-red-500/30">
-        <AlertTriangle size={14} className="text-red-400" />
+    <div className="flex items-start gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-transparent hover:border-[#F7931A]/20">
+      <div className="mt-1 bg-[#EA580C]/20 p-2.5 rounded-full border border-[#EA580C]/30 shadow-[0_0_10px_rgba(234,88,12,0.3)]">
+        <AlertTriangle size={14} className="text-[#EA580C]" />
       </div>
       <div>
         <p className="text-sm font-medium text-white">{title}</p>
-        <p className="text-xs text-white/50">{location}</p>
+        <p className="text-xs font-mono text-[#94A3B8] mt-1">{location}</p>
       </div>
-      <span className="text-[10px] text-white/40 ml-auto whitespace-nowrap">{time}</span>
+      <span className="text-[10px] font-mono text-[#94A3B8]/60 ml-auto whitespace-nowrap">{time}</span>
     </div>
   );
 }
 
 function TeamMember({ name, role, status }: any) {
   const statusColors: any = {
-    online: 'bg-green-500',
-    busy: 'bg-yellow-500',
-    task: 'bg-blue-500',
-    offline: 'bg-gray-500'
+    online: 'bg-[#FFD600]',
+    busy: 'bg-[#EA580C]',
+    task: 'bg-[#F7931A]',
+    offline: 'bg-[#1E293B]'
   };
 
   return (
-    <div className="flex items-center justify-between p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
-      <div className="flex items-center gap-3">
+    <div className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
+      <div className="flex items-center gap-4">
         <div className="relative">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#EA580C] to-[#F7931A] flex items-center justify-center text-white font-heading font-bold text-sm shadow-[0_0_15px_rgba(247,147,26,0.4)] group-hover:scale-105 transition-transform">
             {name.substring(0,2).toUpperCase()}
           </div>
-          <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#0f1115] ${statusColors[status]}`}></div>
+          <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-[#0F1115] ${statusColors[status]} shadow-[0_0_10px_currentColor]`}></div>
         </div>
         <div>
-          <p className="text-sm font-medium">{name}</p>
-          <p className="text-xs text-white/50">{role}</p>
+          <p className="text-sm font-medium text-white">{name}</p>
+          <p className="text-[10px] font-mono text-[#94A3B8] tracking-widest uppercase mt-1">{role}</p>
         </div>
       </div>
-      <button className="p-2 bg-white/5 rounded-full hover:bg-white/10 text-white/70 hover:text-white transition-colors">
+      <button className="p-2.5 bg-white/5 border border-[#1E293B] rounded-full hover:bg-white/10 text-[#94A3B8] hover:text-[#F7931A] hover:border-[#F7931A]/30 transition-all">
         <PhoneCall size={14} />
       </button>
     </div>

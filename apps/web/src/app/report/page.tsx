@@ -97,17 +97,17 @@ export default function ReportIssue() {
 
   if (isSuccess) {
     return (
-      <div className="max-w-md mx-auto mt-20 glass-panel p-8 text-center animate-in fade-in zoom-in duration-300">
-        <div className="w-16 h-16 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto mb-4">
+      <div className="max-w-md mx-auto mt-20 crypto-card text-center animate-in fade-in zoom-in duration-300">
+        <div className="w-16 h-16 bg-[#FFD600]/20 text-[#FFD600] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#FFD600]/30 shadow-[0_0_20px_rgba(255,214,0,0.4)]">
           <CheckCircle2 size={32} />
         </div>
-        <h2 className="text-2xl font-bold mb-2 text-white">Issue Reported!</h2>
-        <p className="text-white/60 mb-6">
-          Your issue has been successfully reported and assigned to a coordinator. You will be notified once it is resolved.
+        <h2 className="text-2xl font-heading font-bold mb-2 text-white">Issue Reported!</h2>
+        <p className="text-[#94A3B8] font-mono text-[11px] mb-8 uppercase tracking-wide">
+          Your issue has been successfully added to the ledger and assigned to a coordinator. You will be notified once it is verified.
         </p>
         <button 
           onClick={() => setIsSuccess(false)}
-          className="w-full bg-white/10 hover:bg-white/20 text-white py-3 rounded-lg font-medium transition-colors"
+          className="btn-outline w-full"
         >
           Report Another Issue
         </button>
@@ -117,21 +117,23 @@ export default function ReportIssue() {
 
   return (
     <div className="max-w-2xl mx-auto pb-12">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold text-white tracking-tight">Report an Issue</h1>
-        <p className="text-white/60 mt-1">Found a problem on campus? Let us know.</p>
+      <header className="mb-10 text-center md:text-left">
+        <h1 className="text-4xl font-heading font-bold text-white tracking-tight">
+          Report an <span className="text-gradient">Issue</span>
+        </h1>
+        <p className="text-[#94A3B8] mt-2 font-mono text-sm tracking-wide uppercase">Found a problem on campus? Let us know.</p>
       </header>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="glass-panel p-6 space-y-5">
+        <div className="crypto-card space-y-6">
           {/* Issue Category */}
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-2">Category</label>
+            <label className="block text-[11px] font-mono text-[#F7931A] uppercase tracking-widest mb-3">Category</label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {['Infrastructure', 'IT / Network', 'Cleanliness', 'Electrical'].map((cat) => (
                 <label key={cat} className="cursor-pointer">
                   <input type="radio" name="category" value={cat} className="peer sr-only" defaultChecked={cat === 'Infrastructure'} />
-                  <div className="text-center text-sm py-2 px-3 rounded-lg border border-white/10 bg-white/5 peer-checked:bg-blue-500/20 peer-checked:border-blue-500/50 peer-checked:text-blue-400 transition-all">
+                  <div className="text-center text-xs font-mono uppercase tracking-wide py-3 px-3 rounded-lg border border-[#1E293B] bg-[#030304] peer-checked:bg-[#EA580C]/20 peer-checked:border-[#EA580C]/50 peer-checked:text-[#F7931A] peer-checked:shadow-[inset_0_0_15px_rgba(234,88,12,0.3)] transition-all">
                     {cat}
                   </div>
                 </label>
@@ -141,32 +143,32 @@ export default function ReportIssue() {
 
           {/* Issue Title & Description */}
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-2">Issue Title</label>
+            <label className="block text-[11px] font-mono text-[#F7931A] uppercase tracking-widest mb-3">Issue Title</label>
             <input 
               ref={titleRef}
               required
               type="text" 
               placeholder="E.g., Water leakage in Block A"
-              className="w-full glass-input px-4 py-3 text-white placeholder-white/30"
+              className="w-full crypto-input"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-2">Description</label>
+            <label className="block text-[11px] font-mono text-[#F7931A] uppercase tracking-widest mb-3">Description</label>
             <textarea 
               ref={descRef}
               required
               rows={4}
               placeholder="Provide more details about the issue..."
-              className="w-full glass-input px-4 py-3 text-white placeholder-white/30 resize-none"
+              className="w-full crypto-input resize-none"
             ></textarea>
           </div>
         </div>
 
         {/* Evidence & Location */}
-        <div className="glass-panel p-6 space-y-5">
-          <h2 className="text-lg font-semibold flex items-center gap-2 mb-4">
-            <AlertCircle size={18} className="text-purple-400" />
+        <div className="crypto-card space-y-6">
+          <h2 className="text-lg font-heading font-semibold flex items-center gap-2 mb-2 text-[#FFD600]">
+            <AlertCircle size={18} className="text-[#FFD600]" />
             Evidence & Location
           </h2>
           
@@ -174,7 +176,7 @@ export default function ReportIssue() {
             {/* Photo Upload */}
             <div 
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-white/10 rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/5 transition-colors bg-black/10 relative overflow-hidden"
+              className="border border-dashed border-[#1E293B] bg-[#030304] rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#F7931A]/50 transition-colors relative overflow-hidden"
             >
               <input 
                 type="file" 
@@ -189,15 +191,15 @@ export default function ReportIssue() {
               />
               {file ? (
                 <>
-                  <CheckCircle2 className="text-green-400 mb-2" size={32} />
-                  <p className="text-sm font-medium text-green-400 truncate w-full px-4">{file.name}</p>
-                  <p className="text-xs text-white/40 mt-1">Tap to change</p>
+                  <CheckCircle2 className="text-[#FFD600] mb-2 shadow-[0_0_15px_rgba(255,214,0,0.5)] rounded-full" size={32} />
+                  <p className="text-xs font-mono font-medium text-[#FFD600] truncate w-full px-4">{file.name}</p>
+                  <p className="text-[10px] font-mono text-[#94A3B8] mt-1 uppercase">Tap to change</p>
                 </>
               ) : (
                 <>
-                  <Camera className="text-white/40 mb-2" size={32} />
-                  <p className="text-sm font-medium text-white/80">Upload Photo</p>
-                  <p className="text-xs text-white/40 mt-1">Tap to select a file</p>
+                  <Camera className="text-[#94A3B8] mb-2" size={32} />
+                  <p className="text-[11px] font-mono uppercase tracking-wider text-[#94A3B8]">Upload Photo</p>
+                  <p className="text-[10px] font-mono text-[#94A3B8]/60 mt-1 uppercase">Tap to select a file</p>
                 </>
               )}
             </div>
@@ -205,26 +207,26 @@ export default function ReportIssue() {
             {/* Location Capture */}
             <div 
               onClick={handleLocationCapture}
-              className={`border-2 rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${
+              className={`border border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${
                 location 
-                  ? 'border-green-500/50 bg-green-500/10 hover:bg-green-500/20' 
-                  : 'border-dashed border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10'
+                  ? 'border-[#FFD600]/50 bg-[#FFD600]/10 hover:bg-[#FFD600]/20' 
+                  : 'border-[#1E293B] bg-[#030304] hover:border-[#EA580C]/50'
               }`}
             >
               {isLocating ? (
-                <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+                <div className="w-8 h-8 border-4 border-[#EA580C] border-t-transparent rounded-full animate-spin mb-2 shadow-[0_0_15px_rgba(234,88,12,0.5)]"></div>
               ) : location ? (
-                <CheckCircle2 className="text-green-400 mb-2" size={32} />
+                <CheckCircle2 className="text-[#FFD600] mb-2 shadow-[0_0_15px_rgba(255,214,0,0.5)] rounded-full" size={32} />
               ) : (
-                <MapPin className="text-blue-400 mb-2" size={32} />
+                <MapPin className="text-[#EA580C] mb-2" size={32} />
               )}
               
-              <p className={`text-sm font-medium ${location ? 'text-green-400' : 'text-blue-400'}`}>
+              <p className={`text-[11px] font-mono uppercase tracking-wider ${location ? 'text-[#FFD600]' : 'text-[#94A3B8]'}`}>
                 {isLocating ? 'Locating...' : location ? 'Location Captured' : 'Capture Location'}
               </p>
               
               {!isLocating && (
-                <p className={`text-xs mt-1 ${location ? 'text-green-400/60' : 'text-blue-400/60'}`}>
+                <p className={`text-[10px] font-mono uppercase mt-1 ${location ? 'text-[#FFD600]/60' : 'text-[#94A3B8]/60'}`}>
                   {location ? `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}` : 'GPS is highly recommended'}
                 </p>
               )}
@@ -233,9 +235,9 @@ export default function ReportIssue() {
         </div>
 
         {errorMsg && (
-          <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-lg flex items-center gap-3 animate-in fade-in zoom-in">
+          <div className="bg-[#EA580C]/10 border border-[#EA580C]/20 text-[#EA580C] p-4 rounded-lg flex items-center gap-3 shadow-[0_0_20px_rgba(234,88,12,0.2)] animate-in fade-in zoom-in">
             <AlertCircle size={20} />
-            <p className="text-sm font-medium">{errorMsg}</p>
+            <p className="text-xs font-mono font-bold uppercase tracking-wider">{errorMsg}</p>
           </div>
         )}
 
@@ -243,14 +245,14 @@ export default function ReportIssue() {
         <button 
           type="submit" 
           disabled={isSubmitting}
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white py-4 rounded-xl font-bold text-lg shadow-[0_0_20px_rgba(59,130,246,0.3)] transition-all flex items-center justify-center gap-2"
+          className="btn-primary w-full py-4 text-base tracking-widest flex items-center justify-center gap-3"
         >
           {isSubmitting ? (
-            <span className="animate-pulse">Submitting...</span>
+            <span className="animate-pulse">Validating Proof of Work...</span>
           ) : (
             <>
               <Upload size={20} />
-              Submit Issue
+              SUBMIT TO LEDGER
             </>
           )}
         </button>

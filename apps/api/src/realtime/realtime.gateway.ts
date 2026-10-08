@@ -12,6 +12,7 @@ import { UseGuards } from '@nestjs/common';
 import { WsAuthGuard } from './ws-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
+import { createClient } from '@supabase/supabase-js';
 
 @WebSocketGateway({
   cors: { origin: '*' },
@@ -20,27 +21,42 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   @WebSocketServer()
   server: Server;
 
+  private supabase;
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService
-  ) {}
+  ) {
+    this.supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
 
   async handleConnection(client: Socket) {
     try {
       const token = client.handshake.headers.authorization?.split(' ')[1];
       if (!token) return client.disconnect();
       
-      const payload = this.jwtService.verify(token, {
-        secret: process.env.JWT_SECRET || 'super-secret',
-      });
+      const { data: { user }, error } = await this.supabase.auth.getUser(token);
+      
+      if (error || !user) {
+        return client.disconnect();
+      }
+      
+      const dbUser = await this.prisma.user.findUnique({ where: { id: user.id } });
+      if (!dbUser) return client.disconnect();
+      
+      const payload = { sub: dbUser.id, roles: dbUser.roles };
       client.data.user = payload;
 
       // Join rooms based on userId and role
-      client.join(`user:${payload.sub}`);
-      client.join(`role:${payload.role}`);
-
-      if (payload.role === 'MANAGER') {
-        client.join('all_locations');
+      void client.join(`user:${payload.sub}`);
+      if (Array.isArray(payload.roles)) {
+        payload.roles.forEach((r: string) => { void client.join(`role:${r}`); });
+        if (payload.roles.includes('ADMIN')) {
+          void client.join('all_locations');
+        }
       }
 
       // Join hierarchy rooms to track subordinates
@@ -48,11 +64,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         where: { managerUserId: payload.sub }
       });
       for (const rel of subordinates) {
-        client.join(`managers_of:${rel.subordinateUserId}`);
+        void client.join(`managers_of:${rel.subordinateUserId}`);
       }
 
-      console.log(`Client connected: ${payload.sub} (Role: ${payload.role})`);
-    } catch (e) {
+      console.log(`Client connected: ${payload.sub} (Roles: ${payload.roles.join(', ')})`);
+    } catch (_e) {
       client.disconnect();
     }
   }

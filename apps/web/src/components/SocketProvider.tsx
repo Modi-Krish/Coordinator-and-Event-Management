@@ -40,7 +40,9 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       console.log('Socket disconnected');
     });
 
-    setSocket(socketInstance);
+    setTimeout(() => {
+      setSocket(socketInstance);
+    }, 0);
 
     return () => {
       socketInstance.disconnect();

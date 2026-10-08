@@ -85,22 +85,22 @@ describe('Security & Workflow (e2e)', () => {
       const coordEmail = `staff_${Date.now()}@test.com`;
 
       // 1. Create Supervisor directly via DB
-      const managerUser = await prisma.user.create({
+      const _managerUser = await prisma.user.create({
         data: {
           email: managerEmail,
           passwordHash: 'dummy',
           name: 'Manager',
-          role: Role.SUPERVISOR,
+          roles: [Role.SUPERVISOR],
         }
       });
 
       // 2. Create Staff directly via DB
-      const coordUser = await prisma.user.create({
+      const _coordUser = await prisma.user.create({
         data: {
           email: coordEmail,
           passwordHash: 'dummy',
           name: 'Coordinator',
-          role: Role.STAFF,
+          roles: [Role.STAFF],
         }
       });
 
@@ -111,7 +111,7 @@ describe('Security & Workflow (e2e)', () => {
       });
       await prisma.user.update({
         where: { email: `real_${managerEmail}` },
-        data: { role: Role.SUPERVISOR }
+        data: { roles: [Role.SUPERVISOR] }
       });
       const managerLoginRes = await request(app.getHttpServer()).post('/auth/login').send({
         email: `real_${managerEmail}`, password: 'password'
@@ -123,7 +123,7 @@ describe('Security & Workflow (e2e)', () => {
       });
       await prisma.user.update({
         where: { email: `real_${coordEmail}` },
-        data: { role: Role.STAFF }
+        data: { roles: [Role.STAFF] }
       });
       const coordLoginRes = await request(app.getHttpServer()).post('/auth/login').send({
         email: `real_${coordEmail}`, password: 'password'
