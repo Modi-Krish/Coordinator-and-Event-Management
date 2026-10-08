@@ -9,11 +9,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      setIsAuthenticated(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        setIsAuthenticated(true);
+      }
+    } catch (err) {
+      console.error("Local storage error:", err);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
 
   const handleDemoLogin = async (role: string) => {
