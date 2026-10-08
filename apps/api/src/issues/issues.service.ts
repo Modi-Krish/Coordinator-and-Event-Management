@@ -35,7 +35,7 @@ export class IssuesService {
       if (coordinators.length > 0) {
         // Find the last assigned issue to any coordinator
         const lastIssue = await this.prisma.issue.findFirst({
-          where: { type: IssueType.ISSUE, assignedToId: { in: coordinators.map(c => c.id) } },
+          where: { type: IssueType.ISSUE, assignedToId: { in: coordinators.map((c: any) => c.id) } },
           orderBy: { createdAt: 'desc' },
           select: { assignedToId: true }
         });
@@ -43,7 +43,7 @@ export class IssuesService {
         if (!lastIssue || !lastIssue.assignedToId) {
           assigneeId = coordinators[0].id;
         } else {
-          const lastIdx = coordinators.findIndex(c => c.id === lastIssue.assignedToId);
+          const lastIdx = coordinators.findIndex((c: any) => c.id === lastIssue.assignedToId);
           const nextIdx = (lastIdx + 1) % coordinators.length;
           assigneeId = coordinators[nextIdx].id;
         }
