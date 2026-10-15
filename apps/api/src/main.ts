@@ -12,6 +12,11 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 
+// Polyfill BigInt serialization for Prisma BigInt fields
+(BigInt.prototype as any).toJSON = function () {
+  return Number(this);
+};
+
 async function bootstrap() {
   if (!process.env.DATABASE_URL) {
     throw new Error('FATAL ERROR: DATABASE_URL is not defined in the environment.');
