@@ -5,7 +5,33 @@ This changelog records verified software modifications, architectural milestones
 ---
 
 ## [Unreleased / Recent Iterations] — October 2026
- 
+
+### Interactive Issue Detail Modal, Full Status Stepper & Evidence Lightbox
+- **Summary:** Implemented comprehensive ticket detail modal (`IssueDetailModal.tsx`) enabling coordinators, supervisors, and reporters to click any issue/task across the application to inspect complete 7-stage lifecycle progress, chronological audit trails, high-resolution attached photos via lightbox, and upload field resolution proof.
+- **Frontend Changes:**
+  - Created `IssueDetailModal.tsx`:
+    - Full status lifecycle progress stepper (`REPORTED` -> `ASSIGNED` -> `ACCEPTED` -> `IN_PROGRESS` -> `RESOLVED` -> `VERIFIED` -> `CLOSED`) with completed checkmarks and milestone timestamps (`reportedAt`, `acceptedAt`, `startedAt`, `resolvedAt`, `verifiedAt`, `closedAt`).
+    - Evidence & photo gallery with thumbnail previews, uploader attribution, file size, and upload date.
+    - Fullscreen high-resolution lightbox modal allowing coordinators to inspect incident photos in detail, open in new tab, or download.
+    - Field proof-of-work photo upload button (`POST /issues/:id/attachments`) enabling coordinators to upload repair confirmation photos directly from the modal.
+    - Contextual quick-action status transition buttons for coordinators (Accept, Start Work, Resolve) and supervisors (Verify ✓, Close, Escalate, Reject), plus custom audit remarks input.
+    - Chronological status history timeline with transition badges, actor names, designations, and remarks.
+    - Integrated WebRTC call button to dial the assigned coordinator or reporter directly from the modal.
+  - Wired modal up to all ticket views:
+    - `issues/page.tsx`: Mobile cards and desktop table rows are clickable to open `IssueDetailModal`, with `e.stopPropagation()` on inner controls, photo count badges, and dedicated View buttons.
+    - `tasks/page.tsx`: Mobile task cards and desktop rows open the modal with full status and image preview.
+    - `page.tsx` (Dashboard): Clicking live map issue markers or recent escalation items opens the modal.
+    - `map/page.tsx` (Live Map): Clicking active issue markers opens the modal.
+  - Added `uploadIssueAttachment` and `getAttachmentUrl` utility functions to `src/lib/api.ts`.
+- **Backend Changes:**
+  - Enhanced `getIssueById` and `getIssues` in `IssuesService` to include `uploadedBy` user details on attachments and `changedBy` designations in status history.
+  - Updated `uploadAttachment` in `IssuesService` to emit real-time `issue:updated` socket event upon successful file upload.
+  - Enhanced `main.ts` and `local-storage.service.ts` with `getUploadDir` to ensure upload paths resolve consistently to `apps/api/uploads` regardless of invocation directory.
+- **Verification:**
+  - `npm run test -w apps/api` passed 23/23 tests.
+  - `npm run lint -w apps/api` passed with 0 errors.
+  - `npm run build -w apps/web` compiled with 0 errors.
+
 ### Comprehensive Website Responsive Optimization & Production Hardening
 - **Summary:** Conducted repository-wide responsive hardening across all 8 routes (`/`, `/issues`, `/tasks`, `/report`, `/map`, `/team`, `/calls`, `/landing`), modals, layouts, and interactive components for all standard viewports (320px, 375px, 430px, 600px, 768px, 1024px, 1280px, 1440px, 1920px, 2560px).
 - **Core Architecture & Navigation:**

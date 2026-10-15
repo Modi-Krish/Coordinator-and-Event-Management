@@ -16,6 +16,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import * as maplibregl from 'maplibre-gl';
 import Link from 'next/link';
 import { useCurrentUser, canAssignTasks } from '@/lib/useCurrentUser';
+import { IssueDetailModal } from '@/components/IssueDetailModal';
 
 if (typeof window !== 'undefined') {
   maplibregl.setWorkerUrl("/maplibre-worker.mjs");
@@ -27,22 +28,24 @@ export default function Dashboard() {
   const [issues, setIssues] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
+
+  const loadData = async () => {
+    try {
+      const [issuesData, usersData] = await Promise.all([
+        fetchAPI('/issues'),
+        fetchAPI('/users/team').catch(() => [])
+      ]);
+      setIssues(issuesData);
+      setUsers(usersData);
+    } catch (err) {
+      console.error("Failed to load dashboard data", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        const [issuesData, usersData] = await Promise.all([
-          fetchAPI('/issues'),
-          fetchAPI('/users/team').catch(() => [])
-        ]);
-        setIssues(issuesData);
-        setUsers(usersData);
-      } catch (err) {
-        console.error("Failed to load dashboard data", err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
     loadData();
   }, []);
 
@@ -181,9 +184,13 @@ export default function Dashboard() {
               {/* Real Issue Markers with captured coordinates */}
               {activeIssuePoints.map((issue) => (
                 <Marker key={issue.id} longitude={issue.locationLng} latitude={issue.locationLat} anchor="bottom">
-                  <div className="flex flex-col items-center animate-pulse cursor-pointer">
-                    <span className="text-[10px] font-mono font-bold mb-1 bg-[#030304]/80 text-[#94A3B8] px-2 py-0.5 rounded border border-[#1E293B] backdrop-blur-md max-w-[140px] truncate">{issue.title}</span>
-                    <div className="w-4 h-4 bg-red-500 rounded-full shadow-[0_0_20px_rgba(239,68,68,0.8)] border-2 border-white/20"></div>
+                  <div 
+                    onClick={() => setSelectedIssueId(issue.id)}
+                    className="flex flex-col items-center animate-pulse cursor-pointer group"
+                    title="Click to view issue details & full status"
+                  >
+                    <span className="text-[10px] font-mono font-bold mb-1 bg-[#030304]/80 group-hover:bg-[#F7931A] text-[#94A3B8] group-hover:text-black px-2 py-0.5 rounded border border-[#1E293B] backdrop-blur-md max-w-[140px] truncate transition-colors">{issue.title}</span>
+                    <div className="w-4 h-4 bg-red-500 rounded-full shadow-[0_0_20px_rgba(239,68,68,0.8)] border-2 border-white/20 group-hover:scale-125 transition-transform"></div>
                   </div>
                 </Marker>
               ))}
@@ -232,7 +239,13 @@ export default function Dashboard() {
                 <p className="text-xs sm:text-sm text-white/50">No recent escalations.</p>
               ) : (
                 activeIssues.slice(0, 3).map(issue => (
-                  <EscalationItem key={issue.id} title={issue.title} location={issue.category || "General"} time={new Date(issue.createdAt).toLocaleDateString()} />
+                  <EscalationItem 
+                    key={issue.id} 
+                    title={issue.title} 
+                    location={issue.category || "General"} 
+                    time={new Date(issue.createdAt).toLocaleDateString()} 
+                    onClick={() => setSelectedIssueId(issue.id)}
+                  />
                 ))
               )}
             </div>
@@ -260,6 +273,15 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Full Status & Image Evidence Modal */}
+      {selectedIssueId && (
+        <IssueDetailModal
+          issueId={selectedIssueId}
+          onClose={() => setSelectedIssueId(null)}
+          onUpdated={loadData}
+        />
+      )}
     </div>
   );
 }
@@ -319,14 +341,18 @@ function MapMarker({ top, left, role, name, status }: any) {
   );
 }
 
-function EscalationItem({ title, location, time }: any) {
+function EscalationItem({ title, location, time, onClick }: any) {
   return (
-    <div className="flex items-start gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-transparent hover:border-[#F7931A]/20">
+    <div 
+      onClick={onClick} 
+      className="flex items-start gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-transparent hover:border-[#F7931A]/20"
+      title="Click to view details & status"
+    >
       <div className="mt-1 bg-[#EA580C]/20 p-2.5 rounded-full border border-[#EA580C]/30 shadow-[0_0_10px_rgba(234,88,12,0.3)]">
         <AlertTriangle size={14} className="text-[#EA580C]" />
       </div>
-      <div>
-        <p className="text-sm font-medium text-white">{title}</p>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-white truncate">{title}</p>
         <p className="text-xs font-mono text-[#94A3B8] mt-1">{location}</p>
       </div>
       <span className="text-[10px] font-mono text-[#94A3B8]/60 ml-auto whitespace-nowrap">{time}</span>

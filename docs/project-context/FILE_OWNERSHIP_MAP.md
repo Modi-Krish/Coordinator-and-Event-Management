@@ -53,6 +53,7 @@ This document maps engineering responsibilities directly to the implementing sou
 | **`SocketProvider`** | [`SocketProvider.tsx`](../../apps/web/src/components/SocketProvider.tsx) | Socket.io connection lifecycle, reconnection handling |
 | **`CallProvider`** | [`CallProvider.tsx`](../../apps/web/src/components/CallProvider.tsx) | WebRTC RTCPeerConnection, STUN servers, media streams |
 | **`Sidebar`** | [`Sidebar.tsx`](../../apps/web/src/components/Sidebar.tsx) | Navigation links, user profile pill, notification drawer |
+| **`IssueDetailModal`** | [`IssueDetailModal.tsx`](../../apps/web/src/components/IssueDetailModal.tsx) | Interactive ticket detail modal with status lifecycle stepper, image evidence gallery, high-res lightbox, and proof upload |
 
 ---
 

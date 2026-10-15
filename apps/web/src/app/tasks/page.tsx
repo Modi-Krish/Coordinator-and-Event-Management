@@ -12,6 +12,8 @@ import {
   Trash2,
   Plus,
   UserPlus,
+  Eye,
+  ImageIcon,
 } from "lucide-react";
 import {
   useCurrentUser,
@@ -20,11 +22,13 @@ import {
   isSupervisorOrAdmin,
   hasDesignation,
 } from "@/lib/useCurrentUser";
+import { IssueDetailModal } from "@/components/IssueDetailModal";
 
 export default function TasksPage() {
   const [issues, setIssues] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState<{ issueId: string; title: string } | null>(null);
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
@@ -252,9 +256,13 @@ export default function TasksPage() {
             {filteredIssues.map((issue) => {
               const statusOptions = getStatusOptions(issue);
               return (
-                <div key={issue.id} className="crypto-card !p-4 space-y-3 relative group">
+                <div 
+                  key={issue.id} 
+                  onClick={() => setSelectedIssueId(issue.id)}
+                  className="crypto-card !p-4 space-y-3 relative group cursor-pointer hover:border-[#F7931A]/40 transition-all"
+                >
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 min-w-0">
                       <span className={`text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded-full border ${getStatusColor(issue.status)} font-medium shrink-0`}>
                         {issue.status?.replace("_", " ") || "OPEN"}
                       </span>
@@ -263,13 +271,22 @@ export default function TasksPage() {
                           {issue.category}
                         </span>
                       )}
+                      {issue.attachments?.length > 0 && (
+                        <span className="text-[9px] font-mono text-[#FFD600] bg-[#FFD600]/10 px-2 py-0.5 rounded border border-[#FFD600]/30 flex items-center gap-1 font-semibold shrink-0">
+                          <ImageIcon size={10} /> {issue.attachments.length} {issue.attachments.length === 1 ? 'Photo' : 'Photos'}
+                        </span>
+                      )}
                     </div>
 
                     {(isSupervisorOrAdmin(currentUser) || hasDesignation(currentUser, "MANAGER", "FACULTY")) ? (
                       <select
                         className={`bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-[10px] font-mono uppercase tracking-widest font-bold outline-none cursor-pointer ${getPriorityColor(issue.priority)} shrink-0`}
                         value={issue.priority || "MEDIUM"}
-                        onChange={(e) => updatePriority(issue.id, e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          updatePriority(issue.id, e.target.value);
+                        }}
                       >
                         <option value="LOW" className="bg-[#030304] text-[#FFD600]">LOW</option>
                         <option value="MEDIUM" className="bg-[#030304] text-[#F7931A]">MEDIUM</option>
@@ -285,12 +302,12 @@ export default function TasksPage() {
                   </div>
 
                   <div>
-                    <h3 className="font-heading font-semibold text-white text-base tracking-wide">{issue.title}</h3>
+                    <h3 className="font-heading font-semibold text-white text-base tracking-wide group-hover:text-[#F7931A] transition-colors">{issue.title}</h3>
                     <p className="text-xs text-[#94A3B8] mt-1 line-clamp-2">{issue.description}</p>
                   </div>
 
                   {/* Assignee section */}
-                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-[#030304] border border-[#1E293B]">
+                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-[#030304] border border-[#1E293B]" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-2 min-w-0">
                       {issue.assignedTo ? (
                         <>
@@ -321,7 +338,15 @@ export default function TasksPage() {
                   </p>
 
                   {/* Actions Toolbar */}
-                  <div className="pt-2 border-t border-[#1E293B] flex items-center gap-2">
+                  <div className="pt-2 border-t border-[#1E293B] flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => setSelectedIssueId(issue.id)}
+                      className="btn-outline !py-2 !px-3 text-xs flex items-center gap-1.5 text-[#F7931A] border-[#F7931A]/30 shrink-0"
+                      title="View Full Status & Photos"
+                    >
+                      <Eye size={14} /> View
+                    </button>
+
                     {statusOptions.length > 0 && (
                       <select
                         className="flex-1 bg-[#030304] border border-[#1E293B] rounded-lg px-3 py-2.5 text-xs font-mono uppercase tracking-wider text-white outline-none focus:border-[#F7931A] min-h-[44px]"
@@ -381,10 +406,14 @@ export default function TasksPage() {
                   {filteredIssues.map((issue) => {
                     const statusOptions = getStatusOptions(issue);
                     return (
-                      <tr key={issue.id} className="hover:bg-white/5 transition-colors group">
+                      <tr 
+                        key={issue.id} 
+                        onClick={() => setSelectedIssueId(issue.id)}
+                        className="hover:bg-white/5 transition-colors group cursor-pointer"
+                      >
                         <td className="p-5 border-t border-[#1E293B]">
                           <div className="flex items-start gap-4">
-                            <div className="mt-1 p-2 rounded-lg bg-[#030304] border border-[#1E293B]">
+                            <div className="mt-1 p-2 rounded-lg bg-[#030304] border border-[#1E293B] group-hover:border-[#F7931A]/30 transition-colors">
                               {issue.status === "RESOLVED" || issue.status === "VERIFIED" ? (
                                 <CheckCircle2 size={16} className="text-[#FFD600]" />
                               ) : issue.status === "IN_PROGRESS" ? (
@@ -394,9 +423,16 @@ export default function TasksPage() {
                               )}
                             </div>
                             <div>
-                              <p className="font-heading font-semibold text-white tracking-wide">
-                                {issue.title}
-                              </p>
+                              <div className="flex items-center gap-2">
+                                <p className="font-heading font-semibold text-white tracking-wide group-hover:text-[#F7931A] transition-colors">
+                                  {issue.title}
+                                </p>
+                                {issue.attachments?.length > 0 && (
+                                  <span className="text-[9px] font-mono text-[#FFD600] bg-[#FFD600]/10 px-1.5 py-0.5 rounded border border-[#FFD600]/30 inline-flex items-center gap-1 font-semibold" title={`${issue.attachments.length} photo(s) attached`}>
+                                    <ImageIcon size={10} /> {issue.attachments.length}
+                                  </span>
+                                )}
+                              </div>
                               <p className="text-xs text-[#94A3B8] mt-1 line-clamp-1 max-w-xs">
                                 {issue.description}
                               </p>
@@ -406,7 +442,7 @@ export default function TasksPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="p-5 border-t border-[#1E293B]">
+                        <td className="p-5 border-t border-[#1E293B]" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-2">
                             {issue.assignedTo ? (
                               <>
@@ -433,7 +469,7 @@ export default function TasksPage() {
                             )}
                           </div>
                         </td>
-                        <td className="p-5 border-t border-[#1E293B]">
+                        <td className="p-5 border-t border-[#1E293B]" onClick={(e) => e.stopPropagation()}>
                           {(isSupervisorOrAdmin(currentUser) || hasDesignation(currentUser, "MANAGER", "FACULTY")) ? (
                             <select
                               className={`bg-transparent border border-transparent rounded-lg px-2 py-1 text-[10px] font-mono uppercase tracking-widest font-bold outline-none cursor-pointer transition-all hover:bg-white/5 ${getPriorityColor(issue.priority)}`}
@@ -456,7 +492,14 @@ export default function TasksPage() {
                             {issue.status?.replace("_", " ") || "OPEN"}
                           </span>
                         </td>
-                        <td className="p-5 border-t border-[#1E293B] text-right">
+                        <td className="p-5 border-t border-[#1E293B] text-right" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => setSelectedIssueId(issue.id)}
+                            className="p-2 mr-2 text-[#94A3B8] hover:text-[#F7931A] hover:bg-[#F7931A]/10 rounded-lg transition-colors inline-flex align-middle border border-transparent hover:border-[#F7931A]/30"
+                            title="View Full Status & Photos"
+                          >
+                            <Eye size={16} />
+                          </button>
                           {statusOptions.length > 0 && (
                             <select
                               className="bg-[#030304] border border-[#1E293B] rounded-lg px-3 py-2 text-[11px] font-mono uppercase tracking-wider text-white outline-none focus:border-[#F7931A] cursor-pointer transition-all"
@@ -491,6 +534,15 @@ export default function TasksPage() {
             </div>
           </div>
         </>
+      )}
+
+      {/* Task Details & Status/Images Modal */}
+      {selectedIssueId && (
+        <IssueDetailModal
+          issueId={selectedIssueId}
+          onClose={() => setSelectedIssueId(null)}
+          onUpdated={loadIssues}
+        />
       )}
 
       {/* Create Task Modal */}

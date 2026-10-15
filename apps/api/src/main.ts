@@ -28,7 +28,15 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.enableCors();
   
-  const uploadDir = path.join(process.cwd(), 'uploads');
+  function getUploadDir(): string {
+    const rootApiUploads = path.join(process.cwd(), 'apps', 'api', 'uploads');
+    if (fs.existsSync(path.join(process.cwd(), 'apps', 'api'))) {
+      return rootApiUploads;
+    }
+    return path.join(process.cwd(), 'uploads');
+  }
+
+  const uploadDir = getUploadDir();
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }

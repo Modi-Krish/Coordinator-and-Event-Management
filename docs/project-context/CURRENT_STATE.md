@@ -35,6 +35,7 @@
 | **Role-Aware Dashboards & UI** | Working | "Assign Task" buttons hidden from Coordinators. Dynamic status transitions and assignee selection scoped to user hierarchy. |
 | **Supervisory Verification Gate** | Working | Enforces 403 Forbidden for non-supervisors attempting to verify tickets. |
 | **Live Map & Realtime Telemetry** | Working | Map telemetry with live/stale/disabled badges and WebRTC voice link initiation. |
+| **Interactive Issue Detail & Image Inspection** | Working | Complete ticket modal (`IssueDetailModal.tsx`) with full 7-stage status stepper, photo gallery, high-res lightbox, resolution proof upload, and WebRTC integration. |
 
 ---
 

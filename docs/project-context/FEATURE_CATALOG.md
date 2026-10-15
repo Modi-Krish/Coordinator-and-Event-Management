@@ -122,3 +122,23 @@ This document indexes all major features implemented in the repository, linking 
   - `ADMIN` and `SUPERVISOR` see all team members.
   - `STAFF` see only their direct subordinates.
   - `ADMIN` can specify `reportingManagerId` when provisioning users to attach subordinates to other managers.
+
+---
+
+## 8. Feature: Interactive Ticket Detail Modal, Full Status Stepper & Evidence Lightbox (`FEAT-08`)
+
+- **Purpose:** Enables coordinators, supervisors, staff, and citizens to click any issue/task to inspect full lifecycle status milestones, chronological state transition audit trails, attached photographic evidence, and upload resolution proof.
+- **Frontend Entry Points:**
+  - Clicking any issue card or table row on `/issues` ([`apps/web/src/app/issues/page.tsx`](../../apps/web/src/app/issues/page.tsx))
+  - Clicking any task card or table row on `/tasks` ([`apps/web/src/app/tasks/page.tsx`](../../apps/web/src/app/tasks/page.tsx))
+  - Clicking active issue pins or recent escalation items on the overview dashboard ([`apps/web/src/app/page.tsx`](../../apps/web/src/app/page.tsx))
+  - Clicking issue pins on the live map ([`apps/web/src/app/map/page.tsx`](../../apps/web/src/app/map/page.tsx))
+- **Key Component:** [`IssueDetailModal.tsx`](../../apps/web/src/components/IssueDetailModal.tsx).
+- **Core Capabilities:**
+  - **Full Status Pipeline Stepper:** Step-by-step progress indicator mapping `REPORTED` -> `ASSIGNED` -> `ACCEPTED` -> `IN_PROGRESS` -> `RESOLVED` -> `VERIFIED` -> `CLOSED` with recorded milestone timestamps (`reportedAt`, `acceptedAt`, `startedAt`, `resolvedAt`, `verifiedAt`, `closedAt`).
+  - **Evidence & Photo Gallery:** Previews all attached photos with formatted file size, upload timestamp, and uploader attribution.
+  - **Fullscreen High-Resolution Lightbox:** Modal zoom preview allowing coordinators to inspect incident photos in detail, open in new tab, or download.
+  - **Field Resolution Proof Upload:** Field coordinators and authorized personnel can upload photo proof of resolution via `POST /issues/:id/attachments` directly from the detail modal.
+  - **Quick Status Transitions:** Contextual quick action buttons (Accept, Start Work, Mark Resolved for coordinators; Verify, Close, Escalate, Reject for supervisors).
+  - **Audit History Trail:** Chronological timeline showing state transitions, actor names, designations, and remarks.
+  - **Integrated WebRTC Link:** One-click peer-to-peer audio/video call to the assigned coordinator or reporter.

@@ -7,10 +7,12 @@ import { useSocket } from "@/components/SocketProvider";
 import { useCall } from "@/components/CallProvider";
 import { LocationSharingControl } from "@/components/LocationSharingControl";
 import { useCurrentUser, isCoordinator } from "@/lib/useCurrentUser";
+import { IssueDetailModal } from "@/components/IssueDetailModal";
 
 export default function LiveMapPage() {
   const [issues, setIssues] = useState<any[]>([]);
   const [teamLocations, setTeamLocations] = useState<any[]>([]);
+  const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
   const { socket, isConnected } = useSocket();
   const { initiateCall } = useCall();
   const currentUser = useCurrentUser();
@@ -226,11 +228,17 @@ export default function LiveMapPage() {
           {activeIssuePoints.map((issue) => {
             const coords = getMapCoordinates(issue.locationLat, issue.locationLng);
             return (
-              <div key={issue.id} className="absolute flex flex-col items-center animate-pulse" style={{ top: coords.top, left: coords.left }}>
-                <div className="w-6 h-6 bg-red-500/20 rounded-full flex items-center justify-center border border-red-500/50">
+              <div 
+                key={issue.id} 
+                onClick={() => setSelectedIssueId(issue.id)}
+                className="absolute flex flex-col items-center animate-pulse cursor-pointer group z-10" 
+                style={{ top: coords.top, left: coords.left }}
+                title="Click to view issue details & full status"
+              >
+                <div className="w-6 h-6 bg-red-500/20 rounded-full flex items-center justify-center border border-red-500/50 group-hover:scale-125 transition-transform">
                   <div className="w-3 h-3 bg-red-500 rounded-full shadow-[0_0_20px_rgba(239,68,68,0.8)] border-2 border-[#0F1115]"></div>
                 </div>
-                <span className="text-[10px] font-mono font-bold mt-2 bg-[#030304]/90 text-[#94A3B8] px-2 py-0.5 rounded border border-[#1E293B] shadow-lg backdrop-blur-md max-w-[120px] sm:max-w-[180px] truncate">
+                <span className="text-[10px] font-mono font-bold mt-2 bg-[#030304]/90 group-hover:bg-[#F7931A] text-[#94A3B8] group-hover:text-black px-2 py-0.5 rounded border border-[#1E293B] shadow-lg backdrop-blur-md max-w-[120px] sm:max-w-[180px] truncate transition-colors">
                   {issue.title}
                 </span>
               </div>
@@ -251,6 +259,14 @@ export default function LiveMapPage() {
           )}
         </div>
       </div>
+
+      {/* Full Status & Image Evidence Modal */}
+      {selectedIssueId && (
+        <IssueDetailModal
+          issueId={selectedIssueId}
+          onClose={() => setSelectedIssueId(null)}
+        />
+      )}
     </div>
   );
 }

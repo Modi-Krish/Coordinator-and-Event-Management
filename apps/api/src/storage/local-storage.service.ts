@@ -3,9 +3,17 @@ import { IStorageService } from './storage.interface';
 import * as fs from 'fs';
 import * as path from 'path';
 
+function getUploadDir(): string {
+  const rootApiUploads = path.join(process.cwd(), 'apps', 'api', 'uploads');
+  if (fs.existsSync(path.join(process.cwd(), 'apps', 'api'))) {
+    return rootApiUploads;
+  }
+  return path.join(process.cwd(), 'uploads');
+}
+
 @Injectable()
 export class LocalStorageService implements IStorageService {
-  private readonly uploadDir = path.join(process.cwd(), 'uploads');
+  private readonly uploadDir = getUploadDir();
 
   constructor() {
     if (!fs.existsSync(this.uploadDir)) {

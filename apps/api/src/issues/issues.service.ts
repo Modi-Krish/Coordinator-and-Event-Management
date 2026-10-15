@@ -319,9 +319,14 @@ export class IssuesService {
       where,
       orderBy: { createdAt: 'desc' },
       include: {
-        reportedBy: { select: { id: true, name: true, designations: true } },
-        assignedTo: { select: { id: true, name: true, designations: true } },
-        attachments: true,
+        reportedBy: { select: { id: true, name: true, designations: true, phone: true } },
+        assignedTo: { select: { id: true, name: true, designations: true, phone: true } },
+        attachments: {
+          include: {
+            uploadedBy: { select: { id: true, name: true, designations: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
       },
     });
   }
@@ -333,13 +338,18 @@ export class IssuesService {
     const issue = await this.prisma.issue.findUnique({
       where: { id: issueId },
       include: {
-        attachments: true,
+        attachments: {
+          include: {
+            uploadedBy: { select: { id: true, name: true, designations: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
         history: {
           orderBy: { createdAt: 'asc' },
-          include: { changedBy: { select: { id: true, name: true } } },
+          include: { changedBy: { select: { id: true, name: true, designations: true } } },
         },
-        reportedBy: { select: { id: true, name: true, designations: true } },
-        assignedTo: { select: { id: true, name: true, designations: true } },
+        reportedBy: { select: { id: true, name: true, designations: true, phone: true } },
+        assignedTo: { select: { id: true, name: true, designations: true, phone: true } },
       },
     });
     if (!issue) throw new NotFoundException('Issue not found');
@@ -512,7 +522,14 @@ export class IssuesService {
         mimeType: file.mimetype,
         fileSize: file.size,
       },
+      include: {
+        uploadedBy: { select: { id: true, name: true, designations: true } },
+      },
     });
+
+    // Broadcast updated issue to all real-time subscribers
+    const updated = await this.getIssueById(issueId);
+    this.realtimeGateway.server.emit('issue:updated', updated);
 
     return attachment;
   }

@@ -4,6 +4,16 @@ This document tracks updates and modifications to the persistent engineering kno
 
 ---
 
+## [v1.3.0] — 2026-10-15
+### Interactive Issue Detail Modal, Full Status Stepper & Evidence Lightbox
+- **Trigger:** User request to show full status and enable coordinators to view attached images upon clicking an issue.
+- **Documents Updated:**
+  - `FILE_OWNERSHIP_MAP.md`: Added `IssueDetailModal.tsx` under Shared Context & Client Providers.
+  - `FEATURE_CATALOG.md`: Added `FEAT-08` detailing interactive ticket inspection, full status progress stepper, photo evidence lightbox, and field proof upload.
+  - `CURRENT_STATE.md`: Logged new capability and updated passing test and build metrics.
+  - `CHANGELOG.md`: Added engineering changelog entry for `IssueDetailModal` and backend attachment synchronization.
+  - `CONTEXT_CHANGELOG.md`: Logged documentation sync for v1.3.0.
+
 ## [v1.2.0] — 2026-10-15
 ### Complete Website Responsive Optimization & Production Hardening
 - **Trigger:** Full-suite responsive audit and optimization across 320px–2560px viewports for all pages, layouts, navigation, forms, modals, tables, and telemetry components.
