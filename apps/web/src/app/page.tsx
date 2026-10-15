@@ -14,12 +14,16 @@ import { useSocket } from "@/components/SocketProvider";
 import Map, { Marker } from "react-map-gl/maplibre";
 import 'maplibre-gl/dist/maplibre-gl.css';
 import * as maplibregl from 'maplibre-gl';
+import Link from 'next/link';
+import { useCurrentUser, canAssignTasks } from '@/lib/useCurrentUser';
 
 if (typeof window !== 'undefined') {
   maplibregl.setWorkerUrl("/maplibre-worker.mjs");
 }
 
 export default function Dashboard() {
+  const currentUser = useCurrentUser();
+  const userCanAssign = canAssignTasks(currentUser);
   const [issues, setIssues] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -107,12 +111,14 @@ export default function Dashboard() {
           <p className="text-[#94A3B8] font-mono text-sm mt-2 tracking-wide uppercase">Real-time operational terminal</p>
         </div>
         <div className="flex gap-4">
-          <button className="btn-outline">
-            Generate Report
-          </button>
-          <button className="btn-primary">
-            Assign Task
-          </button>
+          <Link href="/report" className="btn-outline">
+            Report Issue
+          </Link>
+          {userCanAssign && (
+            <Link href="/tasks" className="btn-primary">
+              Assign Task
+            </Link>
+          )}
         </div>
       </header>
 
@@ -242,7 +248,12 @@ export default function Dashboard() {
                 <p className="text-sm text-white/50">No team members online.</p>
               ) : (
                 users.map(user => (
-                  <TeamMember key={user.id} name={user.name} role={user.role} status="online" />
+                  <TeamMember 
+                    key={user.id} 
+                    name={user.name} 
+                    role={user.designations?.[0] || user.role || user.roles?.[0] || 'Member'} 
+                    status="online" 
+                  />
                 ))
               )}
             </div>

@@ -4,8 +4,8 @@ const { createClient } = require('@supabase/supabase-js');
 
 const prisma = new PrismaClient();
 const supabase = createClient(
-  "https://skbmgcddlwzlvidvvsij.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNrYm1nY2RkbHd6bHZpZHZ2c2lqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MTAzMzg5NywiZXhwIjoyMTA2NjA5ODk3fQ.k37ykUCYfZ9o7hrkGmh3et7oSGlgNc7csmeOTPto2LQ"
+  process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
 async function run() {

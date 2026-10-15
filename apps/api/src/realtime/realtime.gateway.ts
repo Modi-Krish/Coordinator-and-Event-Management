@@ -84,18 +84,40 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     @MessageBody() data: { lat: number; lng: number; accuracy?: number }
   ) {
     const user = client.data.user;
-    
-    // 1. Broadcast the new location to supervisors/hierarchy
+
+    // ── Check locationSharingEnabled before processing ──────────────────
+    const dbUser = await this.prisma.user.findUnique({
+      where: { id: user.sub },
+      select: { locationSharingEnabled: true },
+    });
+
+    if (!dbUser?.locationSharingEnabled) {
+      // Silently ignore location updates when sharing is disabled
+      return { status: 'sharing_disabled' };
+    }
+
+    // ── Update lastLocationAt ───────────────────────────────────────────
+    await this.prisma.user.update({
+      where: { id: user.sub },
+      data: { lastLocationAt: new Date() },
+    });
+
+    // ── Build payload ───────────────────────────────────────────────────
     const locationData = {
       userId: user.sub,
-      ...data,
-      timestamp: new Date().toISOString()
+      lat: data.lat,
+      lng: data.lng,
+      accuracy: data.accuracy,
+      timestamp: new Date().toISOString(),
     };
-    
+
+    // ── Broadcast to authorized rooms ──────────────────────────────────
+    // 1. Direct managers in hierarchy
     this.server.to(`managers_of:${user.sub}`).emit('location:update', locationData);
+    // 2. Admin all_locations room
     this.server.to('all_locations').emit('location:update', locationData);
 
-    // 2. Persist to History (rate limit this in production, e.g., once per min)
+    // ── Persist to history (throttled in production) ────────────────────
     await this.prisma.locationHistory.create({
       data: {
         userId: user.sub,
@@ -107,6 +129,38 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
     return { status: 'ok' };
   }
+
+  // ── Location sharing state change ────────────────────────────────────────
+  @UseGuards(WsAuthGuard)
+  @SubscribeMessage('location:sharing_changed')
+  async handleLocationSharingChanged(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { enabled: boolean }
+  ) {
+    const user = client.data.user;
+
+    await this.prisma.user.update({
+      where: { id: user.sub },
+      data: { locationSharingEnabled: data.enabled },
+    });
+
+    // Notify managers about sharing state change
+    const sharingChangeData = {
+      userId: user.sub,
+      locationSharingEnabled: data.enabled,
+      timestamp: new Date().toISOString(),
+    };
+
+    this.server
+      .to(`managers_of:${user.sub}`)
+      .emit('location:sharing_changed', sharingChangeData);
+    this.server
+      .to('all_locations')
+      .emit('location:sharing_changed', sharingChangeData);
+
+    return { status: 'ok', locationSharingEnabled: data.enabled };
+  }
+
 
   // WebRTC Signaling
   

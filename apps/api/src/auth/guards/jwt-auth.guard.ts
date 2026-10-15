@@ -48,7 +48,9 @@ export class JwtAuthGuard implements CanActivate {
     request.user = {
       userId: dbUser.id,
       email: dbUser.email,
-      roles: dbUser.roles
+      roles: dbUser.roles,
+      designations: dbUser.designations,
+      isActive: dbUser.isActive,
     };
     
     return true;

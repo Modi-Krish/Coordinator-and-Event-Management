@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useSocket } from "./SocketProvider";
 import { fetchAPI } from "@/lib/api";
+import { LocationSharingControl } from "./LocationSharingControl";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -105,7 +106,12 @@ export function Sidebar() {
         <NavItem href="/calls" icon={<PhoneCall size={20} />} label="Calls" active={pathname?.startsWith("/calls")} />
       </nav>
 
-      <div className="p-4 border-t border-[#1E293B] space-y-2">
+      <div className="p-4 border-t border-[#1E293B] space-y-3">
+        {user?.designations?.map((d: string) => d.toUpperCase()).includes("COORDINATOR") && (
+          <div className="pb-3 border-b border-[#1E293B]">
+            <LocationSharingControl />
+          </div>
+        )}
         <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors border border-transparent hover:border-[#F7931A]/30">
           <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#EA580C] to-[#F7931A] flex items-center justify-center font-bold text-sm shadow-[0_0_15px_-3px_rgba(234,88,12,0.6)]">
             {user?.name?.substring(0, 2).toUpperCase() || 'U'}
@@ -113,7 +119,7 @@ export function Sidebar() {
           <div className="flex-1 overflow-hidden">
             <p className="text-sm font-medium text-white truncate">{user?.name || 'Loading...'}</p>
             <p className="text-[10px] font-mono text-[#F7931A] font-bold truncate tracking-wider">
-              {user?.role || ''}
+              {user?.designations?.[0] || user?.role || user?.roles?.[0] || ''}
             </p>
           </div>
         </div>

@@ -1,1 +1,38 @@
-node_modules
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment variable files
+.env
+.env*.local
+.env.development
+.env.test
+.env.production
+!.env.example
+
+# Build outputs & caches
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Testing & Coverage
+coverage/
+.nyc_output/
+
+# OS and Editor files
+.DS_Store
+*.pem
+*.key
+*.cert
+.idea/
+.vscode/

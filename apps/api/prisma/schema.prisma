@@ -67,6 +67,8 @@ model User {
   profilePhotoUrl   String?
   status            UserStatus         @default(OFFLINE)
   isActive          Boolean            @default(true)
+  locationSharingEnabled Boolean       @default(false)
+  lastLocationAt    DateTime?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   lastLoginAt       DateTime?
@@ -183,17 +185,21 @@ model Issue {
 }
 
 model IssueStatusHistory {
-  id          String      @id @default(uuid())
-  issueId     String
-  issue       Issue       @relation(fields: [issueId], references: [id])
-  changedById String
-  changedBy   User        @relation("IssueHistoryChanger", fields: [changedById], references: [id])
-  oldStatus   IssueStatus?
-  newStatus   IssueStatus
-  remarks     String?
-  locationLat Float?
-  locationLng Float?
-  createdAt   DateTime    @default(now())
+  id                String      @id @default(uuid())
+  issueId           String
+  issue             Issue       @relation(fields: [issueId], references: [id])
+  changedById       String
+  changedBy         User        @relation("IssueHistoryChanger", fields: [changedById], references: [id])
+  oldStatus         IssueStatus?
+  newStatus         IssueStatus
+  remarks           String?
+  locationLat       Float?
+  locationLng       Float?
+  // Assignment tracking
+  previousAssigneeId String?
+  newAssigneeId     String?
+  assignmentMethod  String?     // 'ROUND_ROBIN' | 'DIRECT' | 'MANUAL_REASSIGN'
+  createdAt         DateTime    @default(now())
 }
 
 model IssueAttachment {
@@ -268,4 +274,18 @@ model AuditLog {
   ipAddress   String?
   userAgent   String?
   createdAt   DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Round-Robin Cursor
+// Stores the last assigned coordinator index per assignment pool.
+// Pool key is typically: 'global' or 'dept:<deptId>' for scoped pools.
+// ─────────────────────────────────────────────────────────────────────────────
+model RoundRobinCursor {
+  id            String   @id @default(uuid())
+  poolKey       String   @unique  // e.g. 'global', 'dept:uuid'
+  lastAssigneeId String?          // ID of the last coordinator assigned
+  updatedAt     DateTime @updatedAt
+
+  @@index([poolKey])
 }
