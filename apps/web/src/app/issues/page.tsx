@@ -3,17 +3,29 @@
 import { useEffect, useState } from "react";
 import { fetchAPI } from "@/lib/api";
 import { useSocket } from "@/components/SocketProvider";
-import { AlertCircle, Clock, CheckCircle2, MoreVertical, Search, Filter, Trash2 } from "lucide-react";
+import { 
+  AlertCircle, 
+  Clock, 
+  CheckCircle2, 
+  Search, 
+  Filter, 
+  Trash2,
+  RefreshCw
+} from "lucide-react";
+import { 
+  useCurrentUser, 
+  isSupervisorOrAdmin, 
+  canVerifyIssues 
+} from "@/lib/useCurrentUser";
 
 export default function IssuesPage() {
   const [issues, setIssues] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const currentUser = useCurrentUser();
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    setCurrentUser(user);
     loadIssues();
   }, []);
 
@@ -23,27 +35,37 @@ export default function IssuesPage() {
     if (!socket || !isConnected) return;
     
     const handleIssueNew = (issue: any) => {
-      setIssues(prev => [issue, ...prev]);
+      if (issue.type === 'TASK') return;
+      setIssues(prev => [issue, ...prev.filter(i => i.id !== issue.id)]);
     };
     const handleIssueUpdated = (issue: any) => {
+      if (issue.type === 'TASK') return;
       setIssues(prev => prev.map(i => i.id === issue.id ? issue : i));
+    };
+    const handleIssueDeleted = (data: { id: string }) => {
+      setIssues(prev => prev.filter(i => i.id !== data.id));
     };
 
     socket.on('issue:new', handleIssueNew);
     socket.on('issue:updated', handleIssueUpdated);
+    socket.on('issue:deleted', handleIssueDeleted);
 
     return () => {
       socket.off('issue:new', handleIssueNew);
       socket.off('issue:updated', handleIssueUpdated);
+      socket.off('issue:deleted', handleIssueDeleted);
     };
   }, [socket, isConnected]);
 
   async function loadIssues() {
     try {
+      setIsLoading(true);
+      setLoadError(null);
       const data = await fetchAPI('/issues?type=ISSUE');
       setIssues(data);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error("Failed to load issues", err);
+      setLoadError(err.message || "Failed to load issues from server");
     } finally {
       setIsLoading(false);
     }
@@ -56,8 +78,9 @@ export default function IssuesPage() {
         body: JSON.stringify({ status: newStatus })
       });
       loadIssues();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to update status", err);
+      alert("Failed to update status: " + err.message);
     }
   }
 
@@ -68,7 +91,7 @@ export default function IssuesPage() {
         body: JSON.stringify({ priority: newPriority })
       });
       loadIssues();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to update priority", err);
     }
   }
@@ -112,6 +135,9 @@ export default function IssuesPage() {
     }
   };
 
+  const isSupervisor = isSupervisorOrAdmin(currentUser);
+  const canVerify = canVerifyIssues(currentUser);
+
   return (
     <div className="max-w-7xl mx-auto pb-12">
       <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -119,7 +145,14 @@ export default function IssuesPage() {
           <h1 className="text-4xl font-heading font-bold text-white tracking-tight">
             Issues <span className="text-gradient">Tracker</span>
           </h1>
-          <p className="text-[#94A3B8] font-mono text-sm mt-2 tracking-wide uppercase">Manage and resolve reported problems</p>
+          <p className="text-[#94A3B8] font-mono text-sm mt-2 tracking-wide uppercase">
+            Manage and resolve reported problems
+            {currentUser && (
+              <span className="ml-2 text-[#F7931A]">
+                — {currentUser.designations?.[0] || currentUser.roles?.[0]}
+              </span>
+            )}
+          </p>
         </div>
         
         <div className="flex gap-4">
@@ -133,14 +166,26 @@ export default function IssuesPage() {
               className="crypto-input !pl-12 pr-4 w-full md:w-80 rounded-t-lg"
             />
           </div>
+          <button onClick={loadIssues} className="btn-outline text-[13px] flex items-center gap-1.5" title="Refresh">
+            <RefreshCw size={15} /> Refresh
+          </button>
           <button className="btn-outline text-[13px]">
             <Filter size={16} className="mr-2" /> Filter
           </button>
         </div>
       </header>
 
+      {loadError && (
+        <div className="p-4 mb-6 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-center justify-between">
+          <span>{loadError}</span>
+          <button onClick={loadIssues} className="btn-outline text-xs py-1 px-3">Retry</button>
+        </div>
+      )}
+
       {isLoading ? (
-        <div className="text-center py-20 font-mono text-[#F7931A] animate-pulse uppercase tracking-widest text-sm">Synchronizing ledger...</div>
+        <div className="text-center py-20 font-mono text-[#F7931A] animate-pulse uppercase tracking-widest text-sm">
+          Synchronizing ledger...
+        </div>
       ) : (
         <div className="crypto-card !p-0 overflow-hidden">
           <div className="overflow-x-auto">
@@ -157,8 +202,13 @@ export default function IssuesPage() {
               <tbody className="divide-y divide-white/5">
                 {filteredIssues.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-white/50">
-                      No issues found.
+                    <td colSpan={5} className="p-12 text-center text-white/50">
+                      <p className="font-heading text-lg text-white/70 mb-1">No issues found.</p>
+                      <p className="text-xs text-[#94A3B8]">
+                        {currentUser?.designations?.[0] === 'COORDINATOR'
+                          ? "You currently have no issues assigned to your queue."
+                          : "No active issues match the current filter criteria."}
+                      </p>
                     </td>
                   </tr>
                 ) : (
@@ -178,7 +228,14 @@ export default function IssuesPage() {
                           <div>
                             <p className="font-heading font-semibold text-white tracking-wide">{issue.title}</p>
                             <p className="text-xs text-[#94A3B8] mt-1 line-clamp-1 max-w-xs">{issue.description}</p>
-                            <p className="text-[10px] font-mono text-[#94A3B8]/60 mt-2 uppercase tracking-widest">Reported {new Date(issue.createdAt).toLocaleString()}</p>
+                            <div className="flex items-center gap-2 mt-2 text-[10px] font-mono text-[#94A3B8]/60 uppercase tracking-widest">
+                              <span>Reported {new Date(issue.createdAt).toLocaleDateString()}</span>
+                              {issue.assignedTo && (
+                                <span className="text-[#F7931A]">
+                                  • Assignee: {issue.assignedTo.name}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -186,7 +243,7 @@ export default function IssuesPage() {
                         <span className="text-[11px] font-mono text-[#94A3B8] uppercase tracking-wider">{issue.category || 'General'}</span>
                       </td>
                       <td className="p-5 border-t border-[#1E293B]">
-                        {(currentUser?.roles?.includes('ADMIN') || currentUser?.roles?.includes('SUPERVISOR') || currentUser?.roles?.includes('STAFF')) ? (
+                        {isSupervisor ? (
                           <select 
                             className={`bg-transparent border border-transparent rounded-lg px-2 py-1 text-[10px] font-mono uppercase tracking-widest font-bold outline-none cursor-pointer transition-all hover:bg-white/5 ${getPriorityColor(issue.priority)}`}
                             value={issue.priority || 'MEDIUM'}
@@ -215,14 +272,12 @@ export default function IssuesPage() {
                           value={issue.status}
                           onChange={(e) => updateStatus(issue.id, e.target.value)}
                         >
-                          {/* Coordinator Flow */}
                           <option value="ASSIGNED" className="bg-[#030304]" disabled>Assigned</option>
                           <option value="ACCEPTED" className="bg-[#030304]">Accept</option>
                           <option value="IN_PROGRESS" className="bg-[#030304]">In Progress</option>
                           <option value="RESOLVED" className="bg-[#030304]">Resolve</option>
                           
-                          {/* Supervisor Flow */}
-                          {['MANAGER', 'FACULTY', 'CORE_MEMBER'].includes(currentUser?.role) && (
+                          {canVerify && (
                             <>
                               <option value="VERIFIED" className="bg-[#030304] text-[#FFD600]">Verify</option>
                               <option value="CLOSED" className="bg-[#030304] text-[#94A3B8]">Close</option>
@@ -231,7 +286,7 @@ export default function IssuesPage() {
                             </>
                           )}
                         </select>
-                        {(currentUser?.roles?.includes('ADMIN') || currentUser?.roles?.includes('SUPERVISOR') || issue.reportedById === currentUser?.id) && (
+                        {(isSupervisor || issue.reportedById === currentUser?.id) && (
                           <button 
                             onClick={() => deleteIssue(issue.id)}
                             className="p-2 ml-3 text-[#94A3B8] hover:text-[#EA580C] hover:bg-[#EA580C]/10 rounded-lg transition-colors inline-flex align-middle border border-transparent hover:border-[#EA580C]/30"

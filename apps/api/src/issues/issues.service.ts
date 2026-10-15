@@ -94,17 +94,11 @@ export class IssuesService {
       assignmentMethod = 'DIRECT';
     }
 
-    // ── Mechanism A: Auto round-robin for citizen/student ISSUE reports ──
+    // ── Mechanism A: Auto round-robin for unassigned ISSUE reports ──────
     if (!assigneeId && type === IssueType.ISSUE) {
-      const isCitizenOrStudent =
-        user.roles?.includes(Role.CITIZEN) ||
-        user.designations?.includes('STUDENT');
-
-      if (isCitizenOrStudent) {
-        assigneeId = await this.getNextCoordinatorRoundRobin();
-        if (assigneeId) {
-          assignmentMethod = 'ROUND_ROBIN';
-        }
+      assigneeId = await this.getNextCoordinatorRoundRobin();
+      if (assigneeId) {
+        assignmentMethod = 'ROUND_ROBIN';
       }
     }
 
