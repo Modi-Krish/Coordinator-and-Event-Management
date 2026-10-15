@@ -139,13 +139,13 @@ export default function IssuesPage() {
   const canVerify = canVerifyIssues(currentUser);
 
   return (
-    <div className="max-w-7xl mx-auto pb-12">
-      <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <h1 className="text-4xl font-heading font-bold text-white tracking-tight">
+    <div className="max-w-7xl mx-auto pb-12 min-w-0">
+      <header className="mb-6 sm:mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 min-w-0">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-4xl font-heading font-bold text-white tracking-tight break-words">
             Issues <span className="text-gradient">Tracker</span>
           </h1>
-          <p className="text-[#94A3B8] font-mono text-sm mt-2 tracking-wide uppercase">
+          <p className="text-[#94A3B8] font-mono text-xs sm:text-sm mt-1 sm:mt-2 tracking-wide uppercase">
             Manage and resolve reported problems
             {currentUser && (
               <span className="ml-2 text-[#F7931A]">
@@ -155,22 +155,22 @@ export default function IssuesPage() {
           </p>
         </div>
         
-        <div className="flex gap-4">
-          <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#F7931A] group-focus-within:text-[#FFD600] transition-colors" size={18} />
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-4 w-full md:w-auto">
+          <div className="relative group flex-1 sm:flex-initial w-full sm:w-auto min-w-[200px]">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#F7931A] group-focus-within:text-[#FFD600] transition-colors" size={17} />
             <input 
               type="text" 
               placeholder="Search active issues..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="crypto-input !pl-12 pr-4 w-full md:w-80 rounded-t-lg"
+              className="crypto-input !pl-11 pr-4 w-full sm:w-64 md:w-72 rounded-lg text-xs sm:text-sm"
             />
           </div>
-          <button onClick={loadIssues} className="btn-outline text-[13px] flex items-center gap-1.5" title="Refresh">
+          <button onClick={loadIssues} className="btn-outline text-xs sm:text-[13px] flex items-center justify-center gap-1.5 py-2 px-3 sm:px-4 min-h-[40px] shrink-0" title="Refresh">
             <RefreshCw size={15} /> Refresh
           </button>
-          <button className="btn-outline text-[13px]">
-            <Filter size={16} className="mr-2" /> Filter
+          <button className="btn-outline text-xs sm:text-[13px] flex items-center justify-center gap-1.5 py-2 px-3 sm:px-4 min-h-[40px] shrink-0">
+            <Filter size={15} /> Filter
           </button>
         </div>
       </header>
@@ -186,33 +186,116 @@ export default function IssuesPage() {
         <div className="text-center py-20 font-mono text-[#F7931A] animate-pulse uppercase tracking-widest text-sm">
           Synchronizing ledger...
         </div>
+      ) : filteredIssues.length === 0 ? (
+        <div className="crypto-card p-12 text-center text-white/50">
+          <p className="font-heading text-lg text-white/70 mb-1">No issues found.</p>
+          <p className="text-xs text-[#94A3B8]">
+            {currentUser?.designations?.[0] === 'COORDINATOR'
+              ? "You currently have no issues assigned to your queue."
+              : "No active issues match the current filter criteria."}
+          </p>
+        </div>
       ) : (
-        <div className="crypto-card !p-0 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-[#1E293B] bg-[#030304]">
-                  <th className="p-5 font-mono text-[10px] text-[#94A3B8] uppercase tracking-widest">Issue Details</th>
-                  <th className="p-5 font-mono text-[10px] text-[#94A3B8] uppercase tracking-widest">Category</th>
-                  <th className="p-5 font-mono text-[10px] text-[#94A3B8] uppercase tracking-widest">Priority</th>
-                  <th className="p-5 font-mono text-[10px] text-[#94A3B8] uppercase tracking-widest">Status</th>
-                  <th className="p-5 font-mono text-[10px] text-[#94A3B8] uppercase tracking-widest text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {filteredIssues.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="p-12 text-center text-white/50">
-                      <p className="font-heading text-lg text-white/70 mb-1">No issues found.</p>
-                      <p className="text-xs text-[#94A3B8]">
-                        {currentUser?.designations?.[0] === 'COORDINATOR'
-                          ? "You currently have no issues assigned to your queue."
-                          : "No active issues match the current filter criteria."}
-                      </p>
-                    </td>
+        <>
+          {/* ─── Mobile Card View (< 768px) ─── */}
+          <div className="block md:hidden space-y-3.5">
+            {filteredIssues.map((issue) => (
+              <div key={issue.id} className="crypto-card !p-4 space-y-3 relative group">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={`text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded-full border ${getStatusColor(issue.status)} font-medium shrink-0`}>
+                      {issue.status?.replace('_', ' ') || 'OPEN'}
+                    </span>
+                    <span className="text-[10px] font-mono text-[#94A3B8] uppercase tracking-wider truncate">
+                      {issue.category || 'General'}
+                    </span>
+                  </div>
+
+                  {isSupervisor ? (
+                    <select 
+                      className={`bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-[10px] font-mono uppercase tracking-widest font-bold outline-none cursor-pointer ${getPriorityColor(issue.priority)} shrink-0`}
+                      value={issue.priority || 'MEDIUM'}
+                      onChange={(e) => updatePriority(issue.id, e.target.value)}
+                    >
+                      <option value="LOW" className="bg-[#030304] text-[#FFD600]">LOW</option>
+                      <option value="MEDIUM" className="bg-[#030304] text-[#F7931A]">MEDIUM</option>
+                      <option value="HIGH" className="bg-[#030304] text-[#EA580C]">HIGH</option>
+                      <option value="CRITICAL" className="bg-[#030304] text-red-500">CRITICAL</option>
+                    </select>
+                  ) : (
+                    <span className={`text-[10px] font-mono uppercase tracking-widest font-bold flex items-center gap-1.5 px-2 py-0.5 rounded bg-white/5 ${getPriorityColor(issue.priority)} shrink-0`}>
+                      <span className="w-1.5 h-1.5 rounded-full bg-current shadow-[0_0_8px_currentColor]"></span>
+                      {issue.priority || 'MEDIUM'}
+                    </span>
+                  )}
+                </div>
+
+                <div>
+                  <h3 className="font-heading font-semibold text-white text-base tracking-wide">{issue.title}</h3>
+                  <p className="text-xs text-[#94A3B8] mt-1 line-clamp-2">{issue.description}</p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 pt-1 text-[10px] font-mono text-[#94A3B8]/70 uppercase tracking-widest">
+                  <span>Reported {new Date(issue.createdAt).toLocaleDateString()}</span>
+                  {issue.assignedTo && (
+                    <span className="text-[#F7931A] font-semibold">
+                      • Assignee: {issue.assignedTo.name}
+                    </span>
+                  )}
+                </div>
+
+                {/* Mobile Actions Toolbar */}
+                <div className="pt-2 border-t border-[#1E293B] flex items-center gap-2">
+                  <select 
+                    className="flex-1 bg-[#030304] border border-[#1E293B] rounded-lg px-3 py-2.5 text-xs font-mono uppercase tracking-wider text-white outline-none focus:border-[#F7931A] min-h-[44px]"
+                    value={issue.status}
+                    onChange={(e) => updateStatus(issue.id, e.target.value)}
+                  >
+                    <option value="ASSIGNED" className="bg-[#030304]" disabled>Assigned</option>
+                    <option value="ACCEPTED" className="bg-[#030304]">Accept</option>
+                    <option value="IN_PROGRESS" className="bg-[#030304]">In Progress</option>
+                    <option value="RESOLVED" className="bg-[#030304]">Resolve</option>
+                    
+                    {canVerify && (
+                      <>
+                        <option value="VERIFIED" className="bg-[#030304] text-[#FFD600]">Verify ✓</option>
+                        <option value="CLOSED" className="bg-[#030304] text-[#94A3B8]">Close</option>
+                        <option value="ESCALATED" className="bg-[#030304] text-red-500">Escalate</option>
+                        <option value="REJECTED" className="bg-[#030304] text-[#EA580C]">Reject</option>
+                      </>
+                    )}
+                  </select>
+
+                  {(isSupervisor || issue.reportedById === currentUser?.id) && (
+                    <button 
+                      onClick={() => deleteIssue(issue.id)}
+                      className="p-2.5 text-[#94A3B8] hover:text-[#EA580C] hover:bg-[#EA580C]/10 rounded-lg transition-colors border border-[#1E293B] hover:border-[#EA580C]/30 min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
+                      title="Delete Issue"
+                      aria-label="Delete Issue"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* ─── Desktop Table View (>= 768px) ─── */}
+          <div className="hidden md:block crypto-card !p-0 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-[#1E293B] bg-[#030304]">
+                    <th className="p-5 font-mono text-[10px] text-[#94A3B8] uppercase tracking-widest">Issue Details</th>
+                    <th className="p-5 font-mono text-[10px] text-[#94A3B8] uppercase tracking-widest">Category</th>
+                    <th className="p-5 font-mono text-[10px] text-[#94A3B8] uppercase tracking-widest">Priority</th>
+                    <th className="p-5 font-mono text-[10px] text-[#94A3B8] uppercase tracking-widest">Status</th>
+                    <th className="p-5 font-mono text-[10px] text-[#94A3B8] uppercase tracking-widest text-right">Actions</th>
                   </tr>
-                ) : (
-                  filteredIssues.map((issue) => (
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {filteredIssues.map((issue) => (
                     <tr key={issue.id} className="hover:bg-white/5 transition-colors group">
                       <td className="p-5 border-t border-[#1E293B]">
                         <div className="flex items-start gap-4">
@@ -297,12 +380,12 @@ export default function IssuesPage() {
                         )}
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

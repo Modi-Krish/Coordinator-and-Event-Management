@@ -5,6 +5,30 @@ This changelog records verified software modifications, architectural milestones
 ---
 
 ## [Unreleased / Recent Iterations] — October 2026
+ 
+### Comprehensive Website Responsive Optimization & Production Hardening
+- **Summary:** Conducted repository-wide responsive hardening across all 8 routes (`/`, `/issues`, `/tasks`, `/report`, `/map`, `/team`, `/calls`, `/landing`), modals, layouts, and interactive components for all standard viewports (320px, 375px, 430px, 600px, 768px, 1024px, 1280px, 1440px, 1920px, 2560px).
+- **Core Architecture & Navigation:**
+  - Removed blanket `overflow-x: hidden` from body to eliminate concealment of layout defects; implemented true flex/grid responsive constraints with `min-w-0`.
+  - Added fluid responsive padding to `.crypto-card` and `.glass-card` (`p-5 sm:p-6 lg:p-8`), eliminating severe content truncation on small displays.
+  - Fixed `.crypto-input` bug where textareas were artificially forced to `3rem` height; supported multi-line auto-expansion (`min-h-[5.5rem]`).
+  - Added complete mobile navigation architecture to `Sidebar.tsx`: sticky mobile header (< 768px) with socket connectivity status, notification trigger, user initials chip, and touch-target hamburger toggle; sliding drawer overlay with route navigation, location sharing toggle, and logout button.
+  - Positioned notifications overlay adaptively across desktop (`left-64 w-80`) and mobile (`inset-x-3 sm:right-4 max-w-sm`).
+- **Dashboard & Feature Pages:**
+  - `page.tsx` (Dashboard): Staggered KPI grid columns (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-4`), fluid heading typography (`text-2xl sm:text-4xl md:text-5xl`), responsive map container height (`h-[340px] sm:h-[420px] lg:h-[500px]`), and touch-optimized side panels.
+  - `issues/page.tsx` & `tasks/page.tsx`: Implemented dual-view responsive layout: desktop data table (>= 768px) with horizontal scroll containment and mobile card stack (< 768px) with accessible touch buttons (>= 44x44px), status selectors, and priority dropdowns.
+  - `tasks/page.tsx` Modals: Constrained `CreateTaskModal` and `AssignTaskModal` with `max-h-[90dvh] overflow-y-auto`, responsive padding (`p-4 sm:p-6 md:p-8`), and responsive form grids (`grid-cols-1 sm:grid-cols-2`).
+  - `report/page.tsx`: Fixed category radio grids, multiline textarea sizing, photo and location capture touch blocks (`min-h-[140px]`), and responsive submit button.
+  - `map/page.tsx`: Added collapsible mobile telemetry legend, responsive header layout with location sharing control, and touch-accessible map markers.
+  - `team/page.tsx`: Responsive grid (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`) and responsive user registration modal.
+  - `calls/page.tsx`: Flexible mobile height with accessible contacts scroll area.
+  - `CallProvider.tsx`: Added `p-4` boundary to global WebRTC call modal to prevent screen-edge clipping on 320px devices.
+  - `landing/page.tsx`: Responsive pill navigation, bento grid auto-stacking on mobile, and fluid pricing card padding.
+- **Verification:**
+  - Web Build: `npm run build -w apps/web` passed with 0 TypeScript/Turbopack errors (11 static pages generated).
+  - API Unit Tests: `npm run test -w apps/api` passed (23/23 tests in 4 suites).
+  - API Linter: `npm run lint -w apps/api` passed (0 errors).
+  - All 8 application routes verified returning `200 OK`.
 
 ### Role Permissions, Automatic Issue Distribution, Task Assignment & Live Location
 - **Summary:** Implemented complete 6-tier designation RBAC & hierarchy system (`Student`, `Coordinator`, `Core Member`, `Intern`, `Faculty`, `Manager`), atomic concurrency-safe round-robin cursor, task assignment permission matrix, explicit coordinator location sharing controls, and telemetry staleness detection.

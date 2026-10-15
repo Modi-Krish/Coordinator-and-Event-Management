@@ -148,30 +148,41 @@ export default function LiveMapPage() {
     };
   };
 
+  const [showLegend, setShowLegend] = useState(false);
+
   return (
-    <div className="flex flex-col h-[calc(100vh-6rem)] max-w-7xl mx-auto">
-      <header className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+    <div className="flex flex-col h-[calc(100dvh-5.5rem)] md:h-[calc(100dvh-6rem)] max-w-7xl mx-auto min-w-0">
+      <header className="mb-3 sm:mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-3 sm:gap-4 shrink-0 min-w-0">
         <div>
-          <h1 className="text-4xl font-heading font-bold text-white tracking-tight">
+          <h1 className="text-2xl sm:text-4xl font-heading font-bold text-white tracking-tight break-words">
             Live <span className="text-gradient">Map</span>
           </h1>
-          <p className="text-[#94A3B8] font-mono text-sm mt-2 tracking-wide uppercase">Real-time geospatial telemetry</p>
+          <p className="text-[#94A3B8] font-mono text-xs sm:text-sm mt-1 sm:mt-2 tracking-wide uppercase">Real-time geospatial telemetry</p>
         </div>
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full md:w-auto">
           {/* Explicit location sharing control for field coordinators */}
           {isCoordinator(currentUser) && (
-            <LocationSharingControl className="w-full md:w-auto" />
+            <LocationSharingControl className="w-full sm:w-auto" />
           )}
-          <button className="btn-outline text-[13px]">
-            <Filter size={16} className="mr-2" /> Filters
+          <button className="btn-outline text-xs sm:text-[13px] min-h-[40px] flex items-center justify-center">
+            <Filter size={15} className="mr-2" /> Filters
           </button>
         </div>
       </header>
 
-      <div className="flex-1 crypto-card !p-1 flex flex-col overflow-hidden relative">
-        <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
-          <div className="bg-[#030304]/80 backdrop-blur-md p-4 rounded-xl border border-[#1E293B] text-[10px] font-mono uppercase tracking-widest space-y-3 shadow-[0_0_20px_rgba(247,147,26,0.1)]">
-            <h3 className="font-bold text-[#F7931A] border-b border-[#1E293B] pb-2 mb-2">Telemetry Legend</h3>
+      <div className="flex-1 crypto-card !p-1 flex flex-col overflow-hidden relative min-w-0">
+        <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-10 flex flex-col gap-2 max-w-[calc(100%-1.5rem)]">
+          <div className="sm:hidden">
+            <button
+              onClick={() => setShowLegend(!showLegend)}
+              className="bg-[#030304]/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-[#1E293B] text-[10px] font-mono uppercase tracking-wider text-[#F7931A] flex items-center gap-1.5 shadow-lg"
+            >
+              <Activity size={12} />
+              {showLegend ? "Hide Legend" : "Show Legend"}
+            </button>
+          </div>
+          <div className={`${showLegend ? 'block' : 'hidden'} sm:block bg-[#030304]/90 backdrop-blur-md p-3 sm:p-4 rounded-xl border border-[#1E293B] text-[9px] sm:text-[10px] font-mono uppercase tracking-widest space-y-2 sm:space-y-3 shadow-[0_0_20px_rgba(247,147,26,0.1)]`}>
+            <h3 className="font-bold text-[#F7931A] border-b border-[#1E293B] pb-1.5 mb-1.5">Telemetry Legend</h3>
             <div className="flex items-center gap-2 text-[#94A3B8]">
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]"></div> Live ({teamLocations.filter(u => u.locationStatus === 'LIVE').length})
             </div>
@@ -182,10 +193,10 @@ export default function LiveMapPage() {
               <div className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div> Open Issues ({activeIssuePoints.length})
             </div>
             <div className="flex items-center gap-2 text-[#94A3B8] opacity-60">
-              <WifiOff size={12} /> Sharing Disabled ({teamLocations.filter(u => u.locationStatus === 'SHARING_DISABLED').length})
+              <WifiOff size={12} /> Sharing Off ({teamLocations.filter(u => u.locationStatus === 'SHARING_DISABLED').length})
             </div>
             <div className="flex items-center gap-2 text-[#FFD600] pt-1 border-t border-[#1E293B]">
-              <div className="w-2 h-2 rounded-full bg-[#FFD600] animate-ping"></div> Realtime Gateway
+              <div className="w-2 h-2 rounded-full bg-[#FFD600] animate-ping"></div> Gateway Online
             </div>
           </div>
         </div>
@@ -219,7 +230,7 @@ export default function LiveMapPage() {
                 <div className="w-6 h-6 bg-red-500/20 rounded-full flex items-center justify-center border border-red-500/50">
                   <div className="w-3 h-3 bg-red-500 rounded-full shadow-[0_0_20px_rgba(239,68,68,0.8)] border-2 border-[#0F1115]"></div>
                 </div>
-                <span className="text-[10px] font-mono font-bold mt-2 bg-[#030304]/90 text-[#94A3B8] px-2 py-0.5 rounded border border-[#1E293B] shadow-lg backdrop-blur-md">
+                <span className="text-[10px] font-mono font-bold mt-2 bg-[#030304]/90 text-[#94A3B8] px-2 py-0.5 rounded border border-[#1E293B] shadow-lg backdrop-blur-md max-w-[120px] sm:max-w-[180px] truncate">
                   {issue.title}
                 </span>
               </div>
@@ -228,12 +239,12 @@ export default function LiveMapPage() {
 
           {/* Empty State when no live GPS coordinates are broadcast yet */}
           {totalLocatedPoints === 0 && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-black/40 backdrop-blur-sm z-0">
-              <div className="w-16 h-16 rounded-full bg-[#EA580C]/10 border border-[#EA580C]/30 flex items-center justify-center text-[#F7931A] mb-4 shadow-[0_0_20px_rgba(234,88,12,0.2)]">
-                <Navigation2 size={28} />
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm z-0">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#EA580C]/10 border border-[#EA580C]/30 flex items-center justify-center text-[#F7931A] mb-3 sm:mb-4 shadow-[0_0_20px_rgba(234,88,12,0.2)]">
+                <Navigation2 size={24} />
               </div>
-              <h3 className="text-lg font-heading font-bold text-white tracking-wide">No Active Signatures</h3>
-              <p className="text-xs font-mono text-[#94A3B8] max-w-sm mt-2 uppercase tracking-widest">
+              <h3 className="text-base sm:text-lg font-heading font-bold text-white tracking-wide">No Active Signatures</h3>
+              <p className="text-[11px] sm:text-xs font-mono text-[#94A3B8] max-w-sm mt-1 sm:mt-2 uppercase tracking-widest">
                 Coordinators with location sharing enabled will broadcast telemetry here in real time.
               </p>
             </div>

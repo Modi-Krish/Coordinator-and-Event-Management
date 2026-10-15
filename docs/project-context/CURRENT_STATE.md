@@ -20,6 +20,11 @@
 
 | Capability | Status | Notes |
 | :--- | :--- | :--- |
+| **Comprehensive Mobile-First Responsiveness** | Working | Complete multi-viewport optimization across 320px–2560px viewports (small mobile, standard mobile, tablet, laptop, desktop, ultra-wide). |
+| **Responsive Mobile Navigation Shell** | Working | Sticky mobile header with real-time connection badge, notification trigger, user chip, and touch-optimized sliding drawer (< 768px). |
+| **Dual View Issue & Task Dashboards** | Working | Auto-switching presentation: responsive tables on desktop (>= 768px) and touch-friendly card layouts with >= 44px action buttons on mobile (< 768px). |
+| **Responsive Modals & Overlays** | Working | Constrained viewport heights (`max-h-[90dvh] overflow-y-auto`) and fluid responsive padding on task creation, task assignment, registration, and WebRTC calls. |
+| **Adaptive Telemetry & Maps** | Working | Map telemetry preview and live map canvas dynamically adapt to small screens with collapsible legends and touch-accessible markers. |
 | **6-Role Designation Model** | Working | Complete designation hierarchy (`STUDENT < COORDINATOR < INTERN ≈ CORE < FACULTY < MANAGER`) supported in backend & frontend. |
 | **Centralized Authorization Service** | Working | `AuthorizationService` enforces matrix rules for `canAssignTask`, `canAssignIssue`, `canViewIssue`, `canViewUserLocation`, `canVerifyIssue`. |
 | **Task Assignment Restrictions** | Working | Coordinators and Students blocked from assigning tasks (403 Forbidden). Scope-aware task assignment for Interns, Core, Faculty, Managers. |

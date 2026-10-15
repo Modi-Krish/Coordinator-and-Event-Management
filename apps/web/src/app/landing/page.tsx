@@ -64,17 +64,22 @@ export default function LandingPage() {
         }
 
         /* Nav */
-        .nav-wrap { position: sticky; top: 18px; z-index: 100; display: flex; justify-content: center; padding: 0 16px; }
+        .nav-wrap { position: sticky; top: 12px; z-index: 100; display: flex; justify-content: center; padding: 0 8px; }
+        @media (min-width: 640px) { .nav-wrap { top: 18px; padding: 0 16px; } }
         .pill-nav {
           width: 100%; max-width: 860px;
-          padding: 11px 16px; border-radius: 999px;
-          display: flex; align-items: center; justify-content: space-between; gap: 16px;
+          padding: 8px 12px; border-radius: 999px;
+          display: flex; align-items: center; justify-content: space-between; gap: 8px;
           background: rgba(255,255,255,0.52);
           backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
           border: 1px solid rgba(255,255,255,0.7);
           box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 8px 24px rgba(26,46,31,0.06);
         }
-        .nav-logo { font-family: 'DM Serif Display', serif; font-size: 19px; color: #1A2E1F; }
+        @media (min-width: 640px) {
+          .pill-nav { padding: 11px 16px; gap: 16px; }
+        }
+        .nav-logo { font-family: 'DM Serif Display', serif; font-size: 16px; color: #1A2E1F; white-space: nowrap; }
+        @media (min-width: 640px) { .nav-logo { font-size: 19px; } }
         .nav-logo em { font-style: italic; color: #6B4EFF; }
         .nav-links { display: flex; gap: 4px; }
         @media (max-width: 640px) { .nav-links { display: none; } }
@@ -148,6 +153,9 @@ export default function LandingPage() {
         .bento-card:hover { transform: translateY(-2px); }
         .bento-card.tall { grid-row: span 2; }
         .bento-card.wide { grid-column: span 2; flex-direction: row; align-items: center; justify-content: space-between; }
+        @media (max-width: 640px) {
+          .bento-card.wide { flex-direction: column; align-items: flex-start; gap: 16px; }
+        }
 
         /* Pricing */
         .toggle { width: 48px; height: 26px; background: rgba(26,46,31,0.1); border-radius: 999px; cursor: pointer; position: relative; transition: background 200ms; }
@@ -155,7 +163,8 @@ export default function LandingPage() {
         .toggle-thumb { width: 20px; height: 20px; background: #fff; border-radius: 50%; position: absolute; top: 3px; left: 3px; box-shadow: 0 1px 4px rgba(0,0,0,0.15); transition: transform 200ms ease; }
         .toggle.on .toggle-thumb { transform: translateX(22px); }
 
-        .plan { border-radius: 24px; padding: 32px; flex: 1; transition: transform 180ms; }
+        .plan { border-radius: 24px; padding: 20px; flex: 1; transition: transform 180ms; }
+        @media (min-width: 640px) { .plan { padding: 32px; } }
         .plan:hover { transform: translateY(-4px); }
         .plan-featured { background: #1A2E1F; border: none; color: #fff; box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
         .plan-featured .text-body { color: rgba(255,255,255,0.7); }
@@ -181,9 +190,9 @@ export default function LandingPage() {
             <a href="#dashboard">Dashboard</a>
             <a href="#pricing">Pricing</a>
           </div>
-          <div className="flex gap-2">
-            <Link href="/" className="btn-ghost" style={{ padding: '8px 16px', fontSize: '13px' }}>Sign in</Link>
-            <Link href="/" className="btn-primary" style={{ padding: '8px 16px', fontSize: '13px' }}>Launch App</Link>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Link href="/" className="btn-ghost !px-2.5 sm:!px-4 !py-1.5 text-xs sm:text-[13px] whitespace-nowrap">Sign in</Link>
+            <Link href="/" className="btn-primary !px-2.5 sm:!px-4 !py-1.5 text-xs sm:text-[13px] whitespace-nowrap">Launch App</Link>
           </div>
         </nav>
       </div>

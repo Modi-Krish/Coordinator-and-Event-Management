@@ -102,20 +102,20 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-12">
-      <header className="flex justify-between items-end mb-10">
-        <div>
-          <h1 className="text-4xl md:text-5xl font-heading font-bold text-white tracking-tight">
+    <div className="space-y-6 sm:space-y-8 max-w-7xl mx-auto pb-12 min-w-0">
+      <header className="flex flex-col sm:flex-row justify-between sm:items-end gap-4 mb-6 sm:mb-10">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-heading font-bold text-white tracking-tight break-words">
             Organization <span className="text-gradient">Overview</span>
           </h1>
-          <p className="text-[#94A3B8] font-mono text-sm mt-2 tracking-wide uppercase">Real-time operational terminal</p>
+          <p className="text-[#94A3B8] font-mono text-xs sm:text-sm mt-1 sm:mt-2 tracking-wide uppercase">Real-time operational terminal</p>
         </div>
-        <div className="flex gap-4">
-          <Link href="/report" className="btn-outline">
+        <div className="flex flex-wrap gap-2.5 sm:gap-4 w-full sm:w-auto shrink-0">
+          <Link href="/report" className="btn-outline flex-1 sm:flex-initial text-xs sm:text-sm">
             Report Issue
           </Link>
           {userCanAssign && (
-            <Link href="/tasks" className="btn-primary">
+            <Link href="/tasks" className="btn-primary flex-1 sm:flex-initial text-xs sm:text-sm">
               Assign Task
             </Link>
           )}
@@ -123,26 +123,26 @@ export default function Dashboard() {
       </header>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatCard 
           title="Active Team" 
           value={users.length.toString()} 
           subtitle="Registered members" 
-          icon={<UsersIcon className="text-[#F7931A]" size={24} />} 
+          icon={<UsersIcon className="text-[#F7931A]" size={22} />} 
           trend="0"
         />
         <StatCard 
           title="In Progress" 
           value={inProgressIssues.length.toString()} 
           subtitle="Issues being handled" 
-          icon={<CheckCircle className="text-[#FFD600]" size={24} />} 
+          icon={<CheckCircle className="text-[#FFD600]" size={22} />} 
           trend="0"
         />
         <StatCard 
           title="Open Issues" 
           value={activeIssues.length.toString()} 
           subtitle="Requires attention" 
-          icon={<AlertTriangle className="text-[#EA580C]" size={24} />} 
+          icon={<AlertTriangle className="text-[#EA580C]" size={22} />} 
           trend="0"
           alert={criticalIssues.length > 0}
         />
@@ -150,22 +150,22 @@ export default function Dashboard() {
           title="Avg Resolution" 
           value="--" 
           subtitle="Not enough data" 
-          icon={<Clock className="text-[#94A3B8]" size={24} />} 
+          icon={<Clock className="text-[#94A3B8]" size={22} />} 
           trend="0"
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         {/* Main Map Area */}
-        <div className="lg:col-span-2 crypto-card !p-1 flex flex-col h-[500px] overflow-hidden">
-          <div className="p-4 border-b border-[#1E293B] flex justify-between items-center bg-black/40">
-            <h2 className="font-heading font-semibold flex items-center gap-2 tracking-wide text-lg">
-              <MapPin size={18} className="text-[#F7931A]" />
+        <div className="lg:col-span-2 crypto-card !p-1 flex flex-col h-[340px] sm:h-[420px] lg:h-[500px] overflow-hidden min-w-0">
+          <div className="p-3 sm:p-4 border-b border-[#1E293B] flex flex-wrap gap-2 justify-between items-center bg-black/40">
+            <h2 className="font-heading font-semibold flex items-center gap-2 tracking-wide text-sm sm:text-base md:text-lg">
+              <MapPin size={18} className="text-[#F7931A] shrink-0" />
               Live Team Location
             </h2>
-            <div className="flex gap-2">
-              <span className="text-[10px] font-mono bg-[#EA580C]/20 text-[#F7931A] px-2.5 py-1 rounded-full border border-[#EA580C]/30 uppercase tracking-widest">Coordinators</span>
-              <span className="text-[10px] font-mono bg-red-500/20 text-red-300 px-2.5 py-1 rounded-full border border-red-500/30 uppercase tracking-widest">Issues</span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="text-[9px] sm:text-[10px] font-mono bg-[#EA580C]/20 text-[#F7931A] px-2 sm:px-2.5 py-1 rounded-full border border-[#EA580C]/30 uppercase tracking-widest">Coordinators</span>
+              <span className="text-[9px] sm:text-[10px] font-mono bg-red-500/20 text-red-300 px-2 sm:px-2.5 py-1 rounded-full border border-red-500/30 uppercase tracking-widest">Issues</span>
             </div>
           </div>
           <div className="flex-1 relative overflow-hidden">
@@ -182,7 +182,7 @@ export default function Dashboard() {
               {activeIssuePoints.map((issue) => (
                 <Marker key={issue.id} longitude={issue.locationLng} latitude={issue.locationLat} anchor="bottom">
                   <div className="flex flex-col items-center animate-pulse cursor-pointer">
-                    <span className="text-[10px] font-mono font-bold mb-1 bg-[#030304]/80 text-[#94A3B8] px-2 py-0.5 rounded border border-[#1E293B] backdrop-blur-md">{issue.title}</span>
+                    <span className="text-[10px] font-mono font-bold mb-1 bg-[#030304]/80 text-[#94A3B8] px-2 py-0.5 rounded border border-[#1E293B] backdrop-blur-md max-w-[140px] truncate">{issue.title}</span>
                     <div className="w-4 h-4 bg-red-500 rounded-full shadow-[0_0_20px_rgba(239,68,68,0.8)] border-2 border-white/20"></div>
                   </div>
                 </Marker>
@@ -207,9 +207,9 @@ export default function Dashboard() {
             )}
             
             {/* UI Overlay on map */}
-            <div className="absolute bottom-4 left-4 glass-card !p-3 text-xs">
-              <p className="text-[#94A3B8] mb-1 font-mono uppercase tracking-widest text-[10px]">Tracking Status</p>
-              <div className="flex items-center gap-2 font-mono text-[#F7931A]">
+            <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 glass-card !p-2 sm:!p-3 text-[10px] sm:text-xs">
+              <p className="text-[#94A3B8] mb-0.5 font-mono uppercase tracking-widest text-[9px] sm:text-[10px]">Tracking Status</p>
+              <div className="flex items-center gap-1.5 sm:gap-2 font-mono text-[#F7931A]">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F7931A] opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-[#EA580C]"></span>
@@ -221,15 +221,15 @@ export default function Dashboard() {
         </div>
 
         {/* Side Panel: Escalations & Team */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           <div className="crypto-card">
-            <h2 className="font-heading font-semibold mb-6 flex items-center gap-2 text-lg">
-              <AlertTriangle size={18} className="text-[#EA580C]" />
+            <h2 className="font-heading font-semibold mb-4 sm:mb-6 flex items-center gap-2 text-base sm:text-lg">
+              <AlertTriangle size={18} className="text-[#EA580C] shrink-0" />
               Recent Escalations
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {activeIssues.length === 0 ? (
-                <p className="text-sm text-white/50">No recent escalations.</p>
+                <p className="text-xs sm:text-sm text-white/50">No recent escalations.</p>
               ) : (
                 activeIssues.slice(0, 3).map(issue => (
                   <EscalationItem key={issue.id} title={issue.title} location={issue.category || "General"} time={new Date(issue.createdAt).toLocaleDateString()} />
@@ -239,13 +239,13 @@ export default function Dashboard() {
           </div>
 
           <div className="crypto-card">
-            <h2 className="font-heading font-semibold mb-6 flex items-center gap-2 text-lg">
-              <UsersIcon size={18} className="text-[#F7931A]" />
+            <h2 className="font-heading font-semibold mb-4 sm:mb-6 flex items-center gap-2 text-base sm:text-lg">
+              <UsersIcon size={18} className="text-[#F7931A] shrink-0" />
               Priority Node Operators
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {users.length === 0 ? (
-                <p className="text-sm text-white/50">No team members online.</p>
+                <p className="text-xs sm:text-sm text-white/50">No team members online.</p>
               ) : (
                 users.map(user => (
                   <TeamMember 
@@ -268,18 +268,18 @@ function StatCard({ title, value, subtitle, icon, trend, alert }: any) {
   return (
     <div className={`crypto-card node-accent-tl group ${alert ? 'border-[#EA580C]/50 shadow-[0_0_20px_rgba(234,88,12,0.15)]' : ''}`}>
       {alert && <div className="absolute top-0 right-0 w-24 h-24 bg-[#EA580C]/10 blur-2xl rounded-full"></div>}
-      <div className="flex justify-between items-start relative z-10">
-        <div>
-          <p className="text-[11px] font-mono text-[#94A3B8] uppercase tracking-widest">{title}</p>
-          <h3 className="text-4xl font-heading font-bold mt-2 text-white group-hover:text-[#F7931A] transition-colors">{value}</h3>
+      <div className="flex justify-between items-start relative z-10 gap-2">
+        <div className="min-w-0">
+          <p className="text-[10px] sm:text-[11px] font-mono text-[#94A3B8] uppercase tracking-widest truncate">{title}</p>
+          <h3 className="text-3xl sm:text-4xl font-heading font-bold mt-1.5 sm:mt-2 text-white group-hover:text-[#F7931A] transition-colors truncate">{value}</h3>
         </div>
-        <div className="p-3 bg-[#030304] rounded-lg border border-[#1E293B] group-hover:border-[#F7931A]/30 group-hover:shadow-[0_0_15px_rgba(247,147,26,0.3)] transition-all">
+        <div className="p-2.5 sm:p-3 bg-[#030304] rounded-lg border border-[#1E293B] group-hover:border-[#F7931A]/30 group-hover:shadow-[0_0_15px_rgba(247,147,26,0.3)] transition-all shrink-0">
           {icon}
         </div>
       </div>
-      <div className="mt-6 pt-4 border-t border-[#1E293B] flex items-center justify-between text-xs">
-        <span className="text-[#94A3B8] font-mono text-[10px] uppercase tracking-wide">{subtitle}</span>
-        <span className={`font-mono font-medium ${trend.startsWith('+') ? 'text-[#FFD600]' : 'text-[#F7931A]'}`}>
+      <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-[#1E293B] flex items-center justify-between text-xs gap-2">
+        <span className="text-[#94A3B8] font-mono text-[9px] sm:text-[10px] uppercase tracking-wide truncate">{subtitle}</span>
+        <span className={`font-mono font-medium shrink-0 ${trend.startsWith('+') ? 'text-[#FFD600]' : 'text-[#F7931A]'}`}>
           {trend}
         </span>
       </div>

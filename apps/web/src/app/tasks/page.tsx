@@ -190,13 +190,13 @@ export default function TasksPage() {
   const userCanDelete = isSupervisorOrAdmin(currentUser) || hasDesignation(currentUser, "MANAGER");
 
   return (
-    <div className="max-w-7xl mx-auto pb-12">
-      <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <h1 className="text-4xl font-heading font-bold text-white tracking-tight">
+    <div className="max-w-7xl mx-auto pb-12 min-w-0">
+      <header className="mb-6 sm:mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 min-w-0">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-4xl font-heading font-bold text-white tracking-tight break-words">
             Tasks <span className="text-gradient">Tracker</span>
           </h1>
-          <p className="text-[#94A3B8] font-mono text-sm mt-2 tracking-wide uppercase">
+          <p className="text-[#94A3B8] font-mono text-xs sm:text-sm mt-1 sm:mt-2 tracking-wide uppercase">
             Manage and resolve tasks
             {currentUser && (
               <span className="ml-2 text-[#F7931A]">
@@ -206,31 +206,31 @@ export default function TasksPage() {
           </p>
         </div>
 
-        <div className="flex gap-4">
-          <div className="relative group">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-4 w-full md:w-auto">
+          <div className="relative group flex-1 sm:flex-initial w-full sm:w-auto min-w-[200px]">
             <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-[#F7931A]"
-              size={18}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#F7931A]"
+              size={17}
             />
             <input
               type="text"
               placeholder="Search tasks..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="crypto-input !pl-12 pr-4 w-full md:w-80"
+              className="crypto-input !pl-11 pr-4 w-full sm:w-64 md:w-72 rounded-lg text-xs sm:text-sm"
             />
           </div>
-          <button className="btn-outline text-[13px]">
-            <Filter size={16} className="mr-2" /> Filter
+          <button className="btn-outline text-xs sm:text-[13px] flex items-center justify-center gap-1.5 py-2 px-3 sm:px-4 min-h-[40px] shrink-0">
+            <Filter size={15} /> Filter
           </button>
           {/* Only show Create Task button for users who can assign tasks */}
           {userCanAssign && (
             <button
               id="create-task-btn"
               onClick={() => setShowCreateModal(true)}
-              className="btn-primary text-[13px]"
+              className="btn-primary text-xs sm:text-[13px] flex items-center justify-center gap-1.5 py-2 px-3 sm:px-4 min-h-[40px] shrink-0"
             >
-              <Plus size={16} className="mr-2" /> Create Task
+              <Plus size={16} /> Create Task
             </button>
           )}
         </div>
@@ -240,38 +240,145 @@ export default function TasksPage() {
         <div className="text-center py-20 font-mono text-[#F7931A] animate-pulse uppercase tracking-widest text-sm">
           Loading tasks...
         </div>
+      ) : filteredIssues.length === 0 ? (
+        <div className="crypto-card p-12 text-center text-white/50">
+          <p className="font-heading text-lg text-white/70 mb-1">No tasks found.</p>
+          <p className="text-xs text-[#94A3B8]">There are currently no tasks matching your filters.</p>
+        </div>
       ) : (
-        <div className="crypto-card !p-0 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-[#1E293B] bg-[#030304]">
-                  <th className="p-5 font-mono text-[10px] text-[#94A3B8] uppercase tracking-widest">
-                    Task Details
-                  </th>
-                  <th className="p-5 font-mono text-[10px] text-[#94A3B8] uppercase tracking-widest">
-                    Assignee
-                  </th>
-                  <th className="p-5 font-mono text-[10px] text-[#94A3B8] uppercase tracking-widest">
-                    Priority
-                  </th>
-                  <th className="p-5 font-mono text-[10px] text-[#94A3B8] uppercase tracking-widest">
-                    Status
-                  </th>
-                  <th className="p-5 font-mono text-[10px] text-[#94A3B8] uppercase tracking-widest text-right">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {filteredIssues.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="p-8 text-center text-white/50">
-                      No tasks found.
-                    </td>
+        <>
+          {/* ─── Mobile Card View (< 768px) ─── */}
+          <div className="block md:hidden space-y-3.5">
+            {filteredIssues.map((issue) => {
+              const statusOptions = getStatusOptions(issue);
+              return (
+                <div key={issue.id} className="crypto-card !p-4 space-y-3 relative group">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={`text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded-full border ${getStatusColor(issue.status)} font-medium shrink-0`}>
+                        {issue.status?.replace("_", " ") || "OPEN"}
+                      </span>
+                      {issue.category && (
+                        <span className="text-[10px] font-mono text-[#94A3B8] uppercase tracking-wider truncate">
+                          {issue.category}
+                        </span>
+                      )}
+                    </div>
+
+                    {(isSupervisorOrAdmin(currentUser) || hasDesignation(currentUser, "MANAGER", "FACULTY")) ? (
+                      <select
+                        className={`bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-[10px] font-mono uppercase tracking-widest font-bold outline-none cursor-pointer ${getPriorityColor(issue.priority)} shrink-0`}
+                        value={issue.priority || "MEDIUM"}
+                        onChange={(e) => updatePriority(issue.id, e.target.value)}
+                      >
+                        <option value="LOW" className="bg-[#030304] text-[#FFD600]">LOW</option>
+                        <option value="MEDIUM" className="bg-[#030304] text-[#F7931A]">MEDIUM</option>
+                        <option value="HIGH" className="bg-[#030304] text-[#EA580C]">HIGH</option>
+                        <option value="CRITICAL" className="bg-[#030304] text-red-500">CRITICAL</option>
+                      </select>
+                    ) : (
+                      <span className={`text-[10px] font-mono uppercase tracking-widest font-bold flex items-center gap-1.5 px-2 py-0.5 rounded bg-white/5 ${getPriorityColor(issue.priority)} shrink-0`}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-current shadow-[0_0_8px_currentColor]"></span>
+                        {issue.priority || "MEDIUM"}
+                      </span>
+                    )}
+                  </div>
+
+                  <div>
+                    <h3 className="font-heading font-semibold text-white text-base tracking-wide">{issue.title}</h3>
+                    <p className="text-xs text-[#94A3B8] mt-1 line-clamp-2">{issue.description}</p>
+                  </div>
+
+                  {/* Assignee section */}
+                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-[#030304] border border-[#1E293B]">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {issue.assignedTo ? (
+                        <>
+                          <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#EA580C] to-[#F7931A] flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+                            {issue.assignedTo.name?.substring(0, 2).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs text-white font-medium truncate">{issue.assignedTo.name}</p>
+                            <p className="text-[10px] text-[#94A3B8] truncate">{issue.assignedTo.designations?.[0] || "Staff"}</p>
+                          </div>
+                        </>
+                      ) : (
+                        <span className="text-[11px] font-mono text-red-400/80 uppercase">Unassigned</span>
+                      )}
+                    </div>
+                    {userCanAssign && (
+                      <button
+                        onClick={() => setShowAssignModal({ issueId: issue.id, title: issue.title })}
+                        className="p-1.5 px-2.5 rounded-md bg-[#F7931A]/10 text-[#F7931A] hover:bg-[#F7931A]/20 border border-[#F7931A]/30 text-[10px] font-mono uppercase flex items-center gap-1 shrink-0"
+                      >
+                        <UserPlus size={12} /> Assign
+                      </button>
+                    )}
+                  </div>
+
+                  <p className="text-[10px] font-mono text-[#94A3B8]/60 uppercase tracking-widest">
+                    Created {new Date(issue.createdAt).toLocaleDateString()}
+                  </p>
+
+                  {/* Actions Toolbar */}
+                  <div className="pt-2 border-t border-[#1E293B] flex items-center gap-2">
+                    {statusOptions.length > 0 && (
+                      <select
+                        className="flex-1 bg-[#030304] border border-[#1E293B] rounded-lg px-3 py-2.5 text-xs font-mono uppercase tracking-wider text-white outline-none focus:border-[#F7931A] min-h-[44px]"
+                        value={issue.status}
+                        onChange={(e) => updateStatus(issue.id, e.target.value)}
+                      >
+                        <option value={issue.status} disabled className="bg-[#030304]">
+                          — Status: {issue.status} —
+                        </option>
+                        {statusOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value} className="bg-[#030304]">
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    {userCanDelete && (
+                      <button
+                        onClick={() => deleteTask(issue.id)}
+                        className="p-2.5 text-[#94A3B8] hover:text-[#EA580C] hover:bg-[#EA580C]/10 rounded-lg transition-colors border border-[#1E293B] hover:border-[#EA580C]/30 min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
+                        title="Delete Task"
+                        aria-label="Delete Task"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ─── Desktop Table View (>= 768px) ─── */}
+          <div className="hidden md:block crypto-card !p-0 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-[#1E293B] bg-[#030304]">
+                    <th className="p-5 font-mono text-[10px] text-[#94A3B8] uppercase tracking-widest">
+                      Task Details
+                    </th>
+                    <th className="p-5 font-mono text-[10px] text-[#94A3B8] uppercase tracking-widest">
+                      Assignee
+                    </th>
+                    <th className="p-5 font-mono text-[10px] text-[#94A3B8] uppercase tracking-widest">
+                      Priority
+                    </th>
+                    <th className="p-5 font-mono text-[10px] text-[#94A3B8] uppercase tracking-widest">
+                      Status
+                    </th>
+                    <th className="p-5 font-mono text-[10px] text-[#94A3B8] uppercase tracking-widest text-right">
+                      Actions
+                    </th>
                   </tr>
-                ) : (
-                  filteredIssues.map((issue) => {
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {filteredIssues.map((issue) => {
                     const statusOptions = getStatusOptions(issue);
                     return (
                       <tr key={issue.id} className="hover:bg-white/5 transition-colors group">
@@ -314,7 +421,6 @@ export default function TasksPage() {
                             ) : (
                               <span className="text-[11px] font-mono text-red-400/70 uppercase">Unassigned</span>
                             )}
-                            {/* Assignment button (only for authorized users) */}
                             {userCanAssign && (
                               <button
                                 id={`assign-task-${issue.id}`}
@@ -379,12 +485,12 @@ export default function TasksPage() {
                         </td>
                       </tr>
                     );
-                  })
-                )}
-              </tbody>
-            </table>
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Create Task Modal */}
@@ -465,12 +571,12 @@ function CreateTaskModal({ teamMembers, currentUser, onClose, onCreated }: any) 
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="glass-panel max-w-lg w-full p-8 animate-in fade-in zoom-in duration-200">
-        <h2 className="text-xl font-heading font-bold text-white mb-6">Create Task</h2>
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+      <div className="glass-panel max-w-lg w-full p-4 sm:p-6 md:p-8 my-auto max-h-[90dvh] overflow-y-auto rounded-2xl animate-in fade-in zoom-in duration-200">
+        <h2 className="text-lg sm:text-xl font-heading font-bold text-white mb-4 sm:mb-6">Create Task</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-xs font-mono text-[#94A3B8] uppercase tracking-widest mb-2 block">Title *</label>
+            <label className="text-xs font-mono text-[#94A3B8] uppercase tracking-widest mb-1.5 block">Title *</label>
             <input
               required
               value={form.title}
@@ -480,7 +586,7 @@ function CreateTaskModal({ teamMembers, currentUser, onClose, onCreated }: any) 
             />
           </div>
           <div>
-            <label className="text-xs font-mono text-[#94A3B8] uppercase tracking-widest mb-2 block">Description</label>
+            <label className="text-xs font-mono text-[#94A3B8] uppercase tracking-widest mb-1.5 block">Description</label>
             <textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -488,9 +594,9 @@ function CreateTaskModal({ teamMembers, currentUser, onClose, onCreated }: any) 
               placeholder="Detailed description..."
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
             <div>
-              <label className="text-xs font-mono text-[#94A3B8] uppercase tracking-widest mb-2 block">Priority</label>
+              <label className="text-xs font-mono text-[#94A3B8] uppercase tracking-widest mb-1.5 block">Priority</label>
               <select
                 value={form.priority}
                 onChange={(e) => setForm({ ...form, priority: e.target.value })}
@@ -503,7 +609,7 @@ function CreateTaskModal({ teamMembers, currentUser, onClose, onCreated }: any) 
               </select>
             </div>
             <div>
-              <label className="text-xs font-mono text-[#94A3B8] uppercase tracking-widest mb-2 block">Category</label>
+              <label className="text-xs font-mono text-[#94A3B8] uppercase tracking-widest mb-1.5 block">Category</label>
               <input
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value })}
@@ -515,7 +621,7 @@ function CreateTaskModal({ teamMembers, currentUser, onClose, onCreated }: any) 
 
           {userCanAssign && (
             <div>
-              <label className="text-xs font-mono text-[#94A3B8] uppercase tracking-widest mb-2 block">Assign To</label>
+              <label className="text-xs font-mono text-[#94A3B8] uppercase tracking-widest mb-1.5 block">Assign To</label>
               <select
                 value={form.assignedToId}
                 onChange={(e) => setForm({ ...form, assignedToId: e.target.value })}
@@ -532,7 +638,7 @@ function CreateTaskModal({ teamMembers, currentUser, onClose, onCreated }: any) 
           )}
 
           <div>
-            <label className="text-xs font-mono text-[#94A3B8] uppercase tracking-widest mb-2 block">Deadline</label>
+            <label className="text-xs font-mono text-[#94A3B8] uppercase tracking-widest mb-1.5 block">Deadline</label>
             <input
               type="datetime-local"
               value={form.deadline}
@@ -541,9 +647,9 @@ function CreateTaskModal({ teamMembers, currentUser, onClose, onCreated }: any) 
             />
           </div>
 
-          <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="btn-outline flex-1">Cancel</button>
-            <button type="submit" disabled={submitting} className="btn-primary flex-1 disabled:opacity-50">
+          <div className="flex gap-3 pt-3">
+            <button type="button" onClick={onClose} className="btn-outline flex-1 min-h-[44px]">Cancel</button>
+            <button type="submit" disabled={submitting} className="btn-primary flex-1 min-h-[44px] disabled:opacity-50">
               {submitting ? "Creating..." : "Create Task"}
             </button>
           </div>
@@ -572,13 +678,13 @@ function AssignTaskModal({ issueId, issueTitle, teamMembers, currentUser, onClos
   });
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="glass-panel max-w-md w-full p-8 animate-in fade-in zoom-in duration-200">
-        <h2 className="text-xl font-heading font-bold text-white mb-2">Assign Task</h2>
-        <p className="text-sm text-[#94A3B8] mb-6 line-clamp-1">{issueTitle}</p>
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+      <div className="glass-panel max-w-md w-full p-4 sm:p-6 md:p-8 my-auto max-h-[90dvh] overflow-y-auto rounded-2xl animate-in fade-in zoom-in duration-200">
+        <h2 className="text-lg sm:text-xl font-heading font-bold text-white mb-2">Assign Task</h2>
+        <p className="text-xs sm:text-sm text-[#94A3B8] mb-4 sm:mb-6 line-clamp-1">{issueTitle}</p>
         <div className="space-y-4">
           <div>
-            <label className="text-xs font-mono text-[#94A3B8] uppercase tracking-widest mb-2 block">Assign To *</label>
+            <label className="text-xs font-mono text-[#94A3B8] uppercase tracking-widest mb-1.5 block">Assign To *</label>
             <select
               value={assigneeId}
               onChange={(e) => setAssigneeId(e.target.value)}
@@ -593,7 +699,7 @@ function AssignTaskModal({ issueId, issueTitle, teamMembers, currentUser, onClos
             </select>
           </div>
           <div>
-            <label className="text-xs font-mono text-[#94A3B8] uppercase tracking-widest mb-2 block">Remarks</label>
+            <label className="text-xs font-mono text-[#94A3B8] uppercase tracking-widest mb-1.5 block">Remarks</label>
             <textarea
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
@@ -601,12 +707,12 @@ function AssignTaskModal({ issueId, issueTitle, teamMembers, currentUser, onClos
               placeholder="Optional assignment notes..."
             />
           </div>
-          <div className="flex gap-3">
-            <button onClick={onClose} className="btn-outline flex-1">Cancel</button>
+          <div className="flex gap-3 pt-2">
+            <button onClick={onClose} className="btn-outline flex-1 min-h-[44px]">Cancel</button>
             <button
               onClick={() => assigneeId && onAssigned(assigneeId, remarks)}
               disabled={!assigneeId}
-              className="btn-primary flex-1 disabled:opacity-50"
+              className="btn-primary flex-1 min-h-[44px] disabled:opacity-50"
             >
               Assign
             </button>

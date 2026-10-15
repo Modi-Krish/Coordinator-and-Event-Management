@@ -82,14 +82,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   if (!isAuthenticated) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-[#0a0a0a] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]">
-        <div className="glass-panel p-10 max-w-md w-full mx-4 flex flex-col items-center animate-in fade-in zoom-in duration-500">
-          <div className="w-20 h-20 bg-blue-500/20 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(59,130,246,0.3)]">
-            <UserCircle size={40} className="text-blue-400" />
+      <div className="min-h-screen min-h-[100dvh] w-full flex items-center justify-center p-3 sm:p-6 py-8 overflow-y-auto bg-[#0a0a0a] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]">
+        <div className="glass-panel p-5 sm:p-8 md:p-10 max-w-md w-full my-auto flex flex-col items-center rounded-2xl animate-in fade-in zoom-in duration-500">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-500/20 rounded-full flex items-center justify-center mb-4 sm:mb-6 shadow-[0_0_30px_rgba(59,130,246,0.3)] shrink-0">
+            <UserCircle size={36} className="text-blue-400" />
           </div>
           
-          <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-          <p className="text-white/60 mb-8 text-center">Log in to your account.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 text-center">Welcome Back</h1>
+          <p className="text-white/60 mb-6 sm:mb-8 text-center text-xs sm:text-sm">Log in to your account.</p>
           
           <form onSubmit={handleRealLogin} className="space-y-4 w-full mb-6">
             <div>

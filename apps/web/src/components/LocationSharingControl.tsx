@@ -153,17 +153,17 @@ export function LocationSharingControl({ className = "" }: LocationSharingContro
   const config = statusConfig[locationStatus];
 
   return (
-    <div className={`crypto-card ${className}`}>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className={`p-2 rounded-lg border border-[#1E293B] ${isSharing ? "bg-emerald-500/10 border-emerald-500/30" : "bg-[#030304]"}`}>
+    <div className={`rounded-xl border border-[#1E293B] bg-[#030304]/60 p-3 sm:p-4 backdrop-blur-sm ${className}`}>
+      <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 mb-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className={`p-2 rounded-lg border border-[#1E293B] shrink-0 ${isSharing ? "bg-emerald-500/10 border-emerald-500/30" : "bg-[#030304]"}`}>
             <MapPin size={16} className={isSharing ? "text-emerald-400" : "text-[#94A3B8]"} />
           </div>
-          <div>
-            <p className="text-sm font-medium text-white">Location Sharing</p>
-            <p className={`text-[10px] font-mono uppercase tracking-widest flex items-center gap-1.5 ${config.color}`}>
+          <div className="min-w-0">
+            <p className="text-xs sm:text-sm font-medium text-white truncate">Location Sharing</p>
+            <p className={`text-[10px] font-mono uppercase tracking-widest flex items-center gap-1.5 truncate ${config.color}`}>
               {config.icon}
-              {config.label}
+              <span className="truncate">{config.label}</span>
             </p>
           </div>
         </div>
@@ -174,7 +174,7 @@ export function LocationSharingControl({ className = "" }: LocationSharingContro
             id="start-location-sharing"
             onClick={startSharing}
             disabled={locationStatus === "REQUESTING"}
-            className="btn-primary text-xs py-2 px-4 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary text-xs py-2 px-3 sm:px-4 disabled:opacity-50 disabled:cursor-not-allowed shrink-0 min-h-[38px]"
           >
             {locationStatus === "REQUESTING" ? "Requesting..." : "Start Sharing"}
           </button>
@@ -182,7 +182,7 @@ export function LocationSharingControl({ className = "" }: LocationSharingContro
           <button
             id="stop-location-sharing"
             onClick={stopSharing}
-            className="flex items-center gap-2 text-xs py-2 px-4 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 hover:border-red-500/50 transition-all font-mono uppercase tracking-wider"
+            className="flex items-center gap-1.5 text-xs py-2 px-3 sm:px-4 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 hover:border-red-500/50 transition-all font-mono uppercase tracking-wider shrink-0 min-h-[38px]"
           >
             <WifiOff size={12} /> Stop Sharing
           </button>

@@ -25,13 +25,13 @@ export default function RootLayout({
           <div className="absolute bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] bg-[#EA580C] opacity-10 blur-[120px] rounded-full"></div>
         </div>
 
-        <div className="relative z-10 flex h-screen w-full overflow-hidden">
+        <div className="relative z-10 flex flex-col md:flex-row h-screen h-[100dvh] w-full overflow-hidden">
         <AuthProvider>
           <SocketProvider>
             <CallProvider>
-              <div className="flex h-screen w-full overflow-hidden">
+              <div className="flex flex-col md:flex-row h-full w-full overflow-hidden min-w-0">
                 <Sidebar />
-                <main className="flex-1 overflow-y-auto p-6 md:p-8">
+                <main className="flex-1 min-w-0 overflow-y-auto p-3.5 sm:p-5 md:p-8">
                   {children}
                 </main>
               </div>

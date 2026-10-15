@@ -4,6 +4,14 @@ This document tracks updates and modifications to the persistent engineering kno
 
 ---
 
+## [v1.2.0] — 2026-10-15
+### Complete Website Responsive Optimization & Production Hardening
+- **Trigger:** Full-suite responsive audit and optimization across 320px–2560px viewports for all pages, layouts, navigation, forms, modals, tables, and telemetry components.
+- **Documents Updated:**
+  - `CURRENT_STATE.md`: Documented responsive audit status, verified Next.js 16 build passing (0 TS errors), 23/23 API unit tests passing, and mobile-first architectural updates.
+  - `CHANGELOG.md`: Detailed breakdown of responsive layout fixes across `Sidebar.tsx`, `globals.css`, `layout.tsx`, `page.tsx`, `issues/page.tsx`, `tasks/page.tsx`, `report/page.tsx`, `map/page.tsx`, `team/page.tsx`, `calls/page.tsx`, `landing/page.tsx`, and provider overlays.
+  - `CONTEXT_CHANGELOG.md`: Logged documentation sync for v1.2.0.
+
 ## [v1.1.0] — 2026-10-15
 ### Role Permissions, Concurrency Cursor, and Location Controls
 - **Trigger:** Implementation of 6-tier designation hierarchy, round-robin cursor, task assignment matrix, and coordinator location sharing controls.

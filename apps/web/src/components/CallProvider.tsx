@@ -211,8 +211,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       
       {/* Global Call UI Overlay */}
       {callState !== 'IDLE' && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center">
-          <div className="bg-[#1a1d24] border border-white/10 rounded-2xl p-6 shadow-2xl w-full max-w-md flex flex-col items-center">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-[#1a1d24] border border-white/10 rounded-2xl p-5 sm:p-8 shadow-2xl w-full max-w-sm sm:max-w-md flex flex-col items-center">
             
             {/* Visualizer / Video */}
             <div className="relative w-32 h-32 mb-6">
